@@ -1,0 +1,4 @@
+[tool.ruff]
+line-length = 88
+lint.select = ["E", "F", "C", "N", "Q", "B"]
+lint.ignore = ["E501"]

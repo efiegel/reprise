@@ -1,0 +1,15 @@
+# Byte-compiled / optimized / DLL files
+**/__pycache__
+
+# Environment variables
+.env
+
+# Coverage reports
+.coverage
+.coverage.*
+
+# macOS specific files
+.DS_Store
+
+# VS Code settings
+/.vscode
