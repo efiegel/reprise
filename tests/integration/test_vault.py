@@ -6,7 +6,7 @@ from reprise.vault import Vault
 class TestVault:
     @pytest.fixture(autouse=True)
     def motif_directory(self, tmp_path):
-        dir = tmp_path / ".motifs"
+        dir = tmp_path / "motifs"
         dir.mkdir()
         return dir
 
