@@ -1,3 +1,5 @@
+import textwrap
+
 import pytest
 
 from reprise.vault import Vault
@@ -11,9 +13,15 @@ class TestVault:
         return dir
 
     def test_add_motif(self, tmp_path, motif_directory):
-        vault = Vault(tmp_path)
-
         content = "Hello, World!"
+        expected_file_contents = textwrap.dedent(f"""
+        ---
+        citations:
+        ---
+        {content}
+        """).strip()
+
+        vault = Vault(tmp_path)
         motif = vault.add_motif(content)
         with open(f"{motif_directory}/{motif.uuid}.md") as file:
-            assert file.read() == content
+            assert file.read() == expected_file_contents

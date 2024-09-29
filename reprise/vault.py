@@ -6,6 +6,6 @@ class Vault:
         self.directory = directory
 
     def add_motif(self, content: str) -> Motif:
-        motif = Motif(content)
+        motif = Motif(content, [])
         motif.save(f"{self.directory}/motifs")
         return motif
