@@ -1,11 +1,8 @@
 from reprise.db import database_context
-from reprise.vault import Vault
-from settings import VAULT_DIRECTORY
+from reprise.repository import add_motif
 
 if __name__ == "__main__":
     text = input("add motif: ")
-    citations = input("citations (optional, comma-separated): ").split(",") or []
-
-    vault = Vault(VAULT_DIRECTORY)
+    citation = input("citation name (optional): ") or None
     with database_context():
-        vault.add_motif(text, citations)
+        add_motif(text, citation)
