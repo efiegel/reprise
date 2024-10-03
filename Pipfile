@@ -11,6 +11,8 @@ pytest-cov = "*"
 [packages]
 python-dotenv = "*"
 peewee = "*"
+langchain = "*"
+langchain-openai = "*"
 
 [requires]
 python_version = "3.11"
