@@ -4,10 +4,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from peewee import (
-    AutoField,
     CharField,
     DateTimeField,
-    ForeignKeyField,
     Model,
     SqliteDatabase,
     TextField,
@@ -42,10 +40,4 @@ class Motif(BaseModel):
     created_at = DateTimeField(default=datetime.now)
 
 
-class Reprisal(BaseModel):
-    id = AutoField(primary_key=True)
-    motif = ForeignKeyField(Motif, backref="motif")
-    created_at = DateTimeField(default=datetime.now)
-
-
-all_models = [Motif, Reprisal]
+all_models = [Motif]
