@@ -1,17 +1,8 @@
-import os
-
-from dotenv import load_dotenv
-
-from reprise.vault import Vault
-
-load_dotenv()
-
-VAULT_DIRECTORY = os.path.expanduser(os.getenv("VAULT_DIRECTORY", ""))
-
+from reprise.db import database_context
+from reprise.repository import add_motif
 
 if __name__ == "__main__":
     text = input("add motif: ")
-    citations = input("citations (optional, comma-separated): ").split(",") or []
-
-    vault = Vault(VAULT_DIRECTORY)
-    vault.add_motif(text, citations)
+    citation = input("citation name (optional): ") or None
+    with database_context():
+        add_motif(text, citation)

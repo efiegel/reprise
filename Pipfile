@@ -10,6 +10,7 @@ pytest-cov = "*"
 
 [packages]
 python-dotenv = "*"
+peewee = "*"
 
 [requires]
 python_version = "3.11"
