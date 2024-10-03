@@ -34,9 +34,9 @@ class BaseModel(Model):
 
 
 class Motif(BaseModel):
-    uuid = CharField(primary_key=True, max_length=36, default=uuid4())
+    uuid = CharField(primary_key=True, max_length=36, default=uuid4)
     content = TextField(null=False)
-    citation = TextField()
+    citation = TextField(null=True)
     created_at = DateTimeField(default=datetime.now)
 
 
