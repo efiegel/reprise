@@ -10,6 +10,12 @@ pipenv shell
 pipenv install
 ```
 
+Install tkinter GUI to interact with motifs before persistence to db:
+```sh
+brew install python-tk
+```
+You will likely will need to reinstall python after this (e.g. re-install from pyenv).
+
 ### Environment
 This tool requires an [OpenAI API key](https://platform.openai.com/api-keys).
 
