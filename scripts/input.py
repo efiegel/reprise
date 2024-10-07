@@ -4,6 +4,8 @@ from tkinter import ttk
 from reprise.db import database_context
 from reprise.llm import Agent
 from reprise.repository import add_motif
+from reprise.vault import Vault
+from settings import VAULT_DIRECTORY
 
 
 class MultiInputDialog(tk.Toplevel):
@@ -67,11 +69,13 @@ def validate_snippets(initial_texts: list[str]) -> list[str]:
 
 
 if __name__ == "__main__":
-    text = input("enter some text: ")
+    # text = input("enter some text: ")
     agent = Agent(model_name="gpt-4o-mini")
-    with database_context():
-        snippets = agent.extract_information(text)
+    vault = Vault(VAULT_DIRECTORY)
+    for diff in vault.diff_iterator():
+        snippets = agent.extract_information(diff)
         validated_snippets = validate_snippets(snippets)
         if validated_snippets:
             for snippet in validated_snippets:
-                add_motif(snippet, None)
+                with database_context():
+                    add_motif(snippet, None)
