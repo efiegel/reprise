@@ -34,14 +34,16 @@ class MultiInputDialog(tk.Toplevel):
 
     def add_entry(self, text=""):
         row = len(self.entries)
-        entry = ttk.Entry(self.entry_frame, width=50)
-        entry.insert(0, text)
-        entry.grid(row=row, column=0, padx=10, pady=5)
+        text_widget = tk.Text(self.entry_frame, height=5, width=50)
+        text_widget.insert("1.0", text)
+        text_widget.grid(row=row, column=0, padx=10, pady=5, sticky="nsew")
         delete_button = ttk.Button(
-            self.entry_frame, text="del", command=lambda e=entry: self.delete_entry(e)
+            self.entry_frame,
+            text="del",
+            command=lambda t=text_widget: self.delete_entry(t),
         )
         delete_button.grid(row=row, column=1, padx=10, pady=5)
-        self.entries.append(entry)
+        self.entries.append(text_widget)
 
     def delete_entry(self, entry):
         row = self.entries.index(entry)
@@ -51,7 +53,11 @@ class MultiInputDialog(tk.Toplevel):
                 widget.grid(row=int(widget.grid_info()["row"]) - 1)
 
     def on_ok(self):
-        self.result = [entry.get() for entry in self.entries if entry.get()]
+        self.result = [
+            entry.get("1.0", "end-1c")
+            for entry in self.entries
+            if entry.get("1.0", "end-1c")
+        ]
         self.destroy()
 
     def on_cancel(self):
