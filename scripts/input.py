@@ -75,7 +75,6 @@ def validate_snippets(initial_texts: list[str]) -> list[str]:
 
 
 if __name__ == "__main__":
-    # text = input("enter some text: ")
     agent = Agent(model_name="gpt-4o-mini")
     vault = Vault(VAULT_DIRECTORY)
     for diff in vault.diff_iterator():
