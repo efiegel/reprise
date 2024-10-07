@@ -40,4 +40,5 @@ class InformationExtractionChain(Chain):
 
     def _call(self, inputs):
         response = self.chain.invoke(inputs)
-        return {"information": response.content.split(",,,")}
+        pieces_of_information = response.content.split(",,,")
+        return {"information": [info.strip() for info in pieces_of_information]}
