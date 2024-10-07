@@ -14,7 +14,9 @@ class InformationExtractionChain(Chain):
         This includes identifying the "why" behind the information, if appropriate. You
         will be given a section of text. Extract the important takeaways, facts, and 
         lessons, including the "why" as appropriate, and return only these things as a 
-        list using exactly this delimeter: ,,,.
+        list using exactly this delimeter: ,,,. Unless absolutely necessary for proper
+        context, don't return anything else, such as bullets or step numbers. Break up
+        these pieces of information into digestable sizes as necessary.
         """
 
         template = """
