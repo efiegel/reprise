@@ -79,3 +79,5 @@ if __name__ == "__main__":
             for snippet in validated_snippets:
                 with database_context():
                     add_motif(snippet, None)
+        else:
+            break
