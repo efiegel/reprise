@@ -10,5 +10,4 @@ class Agent:
     def extract_information(self, content: str) -> list[str]:
         chain = InformationExtractionChain(model=self.model)
         response = chain.invoke({"content": content})
-        info_string = response.get("information")
-        return info_string.split(", ")
+        return response.get("information")

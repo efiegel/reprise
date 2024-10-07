@@ -9,10 +9,12 @@ class InformationExtractionChain(Chain):
     @property
     def chain(self):
         system_message = """
-        You are an expert at comprehending documents and extracting the most important
-        pieces of information from them. You will be given a section of text and must 
-        return a list of the most important pieces of information from the text. Return
-        the pieces of information just as a string, separated by commas.
+        You are an expert at extracting the important takeaways, facts, and lessons from
+        text. You do this so that the information can be distilled for later reference.
+        This includes identifying the "why" behind the information, if appropriate. You
+        will be given a section of text. Extract the important takeaways, facts, and 
+        lessons, including the "why" as appropriate, and return only these things as a 
+        list using exactly this delimeter: ,,,.
         """
 
         template = """
@@ -38,4 +40,4 @@ class InformationExtractionChain(Chain):
 
     def _call(self, inputs):
         response = self.chain.invoke(inputs)
-        return {"information": response.content}
+        return {"information": response.content.split(",,,")}
