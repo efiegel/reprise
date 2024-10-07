@@ -13,6 +13,7 @@ python-dotenv = "*"
 peewee = "*"
 langchain = "*"
 langchain-openai = "*"
+gitpython = "*"
 
 [requires]
 python_version = "3.11"

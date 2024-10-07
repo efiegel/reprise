@@ -8,11 +8,10 @@ class TestInformationExtractionChain:
     def test_information_extraction_chain(self):
         model = ChatOpenAI(model="gpt-4o-mini")
         chain = InformationExtractionChain(model=model)
-        information = "the sky is blue, grass is green"
-        with patch_model_responses([information]):
+        with patch_model_responses(["the sky is blue,,,grass is green"]):
             result = chain.invoke(
                 {
                     "content": "doesn't matter - this is going to be mocked out",
                 }
             )
-        assert result["information"] == information
+        assert result["information"] == ["the sky is blue", "grass is green"]
