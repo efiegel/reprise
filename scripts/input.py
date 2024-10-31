@@ -78,7 +78,7 @@ if __name__ == "__main__":
     agent = Agent(model_name="gpt-4o-mini")
     vault = Vault(VAULT_DIRECTORY)
     for diff in vault.diff_iterator():
-        snippets = agent.extract_information(diff.changes)
+        snippets = agent.extract_information(diff)
         validated_snippets = validate_snippets(snippets)
         if validated_snippets:
             for snippet in validated_snippets:
