@@ -29,6 +29,8 @@ class MultiInputDialog(tk.Toplevel):
         ok_button.pack(side=tk.LEFT, padx=5)
         cancel_button = ttk.Button(button_frame, text="Cancel", command=self.on_cancel)
         cancel_button.pack(side=tk.LEFT, padx=5)
+        skip_button = ttk.Button(button_frame, text="Skip", command=self.on_skip)
+        skip_button.pack(side=tk.LEFT, padx=5)
 
         self.result = None
 
@@ -63,6 +65,10 @@ class MultiInputDialog(tk.Toplevel):
     def on_cancel(self):
         self.destroy()
 
+    def on_skip(self):
+        self.result = []
+        self.destroy()
+
 
 def validate_snippets(initial_texts: list[str], file_name: str) -> list[str]:
     root = tk.Tk()
@@ -80,7 +86,7 @@ if __name__ == "__main__":
     for diff in vault.diff_iterator():
         snippets = agent.extract_information(diff)
         validated_snippets = validate_snippets(snippets, diff.file)
-        if validated_snippets:
+        if validated_snippets is not None:
             for snippet in validated_snippets:
                 with database_context():
                     add_motif(snippet, None)
