@@ -9,9 +9,9 @@ from settings import VAULT_DIRECTORY
 
 
 class MultiInputDialog(tk.Toplevel):
-    def __init__(self, parent, initial_texts):
+    def __init__(self, parent, initial_texts, file_name):
         super().__init__(parent)
-        self.title("Review motifs")
+        self.title(file_name)
         self.entries = []
 
         self.entry_frame = ttk.Frame(self)
@@ -64,11 +64,11 @@ class MultiInputDialog(tk.Toplevel):
         self.destroy()
 
 
-def validate_snippets(initial_texts: list[str]) -> list[str]:
+def validate_snippets(initial_texts: list[str], file_name: str) -> list[str]:
     root = tk.Tk()
     root.withdraw()
 
-    dialog = MultiInputDialog(root, initial_texts)
+    dialog = MultiInputDialog(root, initial_texts, file_name)
     root.wait_window(dialog)
 
     return dialog.result
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     vault = Vault(VAULT_DIRECTORY)
     for diff in vault.diff_iterator():
         snippets = agent.extract_information(diff)
-        validated_snippets = validate_snippets(snippets)
+        validated_snippets = validate_snippets(snippets, diff.file)
         if validated_snippets:
             for snippet in validated_snippets:
                 with database_context():
