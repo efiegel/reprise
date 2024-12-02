@@ -17,6 +17,14 @@ class InformationExtractionChain(Chain):
         list using exactly this delimeter: ,,,. Unless absolutely necessary for proper
         context, don't return anything else, such as bullets or step numbers. Break up
         these pieces of information into digestable sizes as necessary.
+
+        Remember that each extracted takeaway needs to be intelligible on its own. For 
+        example, if the sample of text is "let the flour absorb water for 10 minutes 
+        before kneading, then knead the dough for 5 minutes, then let it rest for 10.
+        All of this helps gluten develop properly." then an appropriate extraction would
+        be "letting the flour absorb water helps gluten develop properly,,,kneading the
+        dough helps gluten develop properly,,,resting the dough helps gluten develop
+        properly,,,make dough by letting flour absorb water, kneading, and resting"
         """
 
         template = """
