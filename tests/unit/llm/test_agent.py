@@ -12,7 +12,7 @@ class TestAgent:
         return Agent(model_name="gpt-4o-mini")
 
     def test_extract_information(self, agent):
-        with patch_model_responses(["the sky is blue, grass is green"]):
+        with patch_model_responses(["the sky is blue,,,grass is green"]):
             assert agent.extract_information(MagicMock()) == [
                 "the sky is blue",
                 "grass is green",

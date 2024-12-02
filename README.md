@@ -1,6 +1,11 @@
 # Reprise
 Leverage AI and spaced repetition to enhance learning retention. Intended for use with tools like [Obsidian](https://obsidian.md/).
 
+**Add snippets to database**
+```
+python -m scripts.input
+```
+
 ## Setup
 ### Dependencies
 Install python packages with [pipenv](https://pipenv.pypa.io/en/latest/):
