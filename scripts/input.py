@@ -27,8 +27,8 @@ class MultiInputDialog(tk.Toplevel):
         button_frame.grid(row=2, columnspan=2, pady=10)
         ok_button = ttk.Button(button_frame, text="OK", command=self.on_ok)
         ok_button.pack(side=tk.LEFT, padx=5)
-        cancel_button = ttk.Button(button_frame, text="Cancel", command=self.on_cancel)
-        cancel_button.pack(side=tk.LEFT, padx=5)
+        stop_button = ttk.Button(button_frame, text="Stop", command=self.on_stop)
+        stop_button.pack(side=tk.LEFT, padx=5)
         skip_button = ttk.Button(button_frame, text="Skip", command=self.on_skip)
         skip_button.pack(side=tk.LEFT, padx=5)
 
@@ -62,7 +62,7 @@ class MultiInputDialog(tk.Toplevel):
         ]
         self.destroy()
 
-    def on_cancel(self):
+    def on_stop(self):
         self.destroy()
 
     def on_skip(self):
