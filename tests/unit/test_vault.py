@@ -1,6 +1,8 @@
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
+from git import NULL_TREE
+
 from reprise.vault import Diff, Vault
 
 
@@ -31,3 +33,24 @@ class TestVault:
             file=file,
             changes=changes,
         )
+
+    def test_get_diff_with_parent(self):
+        commit = MagicMock()
+        parent = MagicMock()
+        commit.parents = [parent]
+
+        vault = Vault(directory="")
+        with patch.object(parent, "diff") as mock_diff:
+            vault._get_diffs(commit)
+
+        mock_diff.assert_called_with(commit, create_patch=True)
+
+    def test_get_diffs_without_parent(self):
+        commit = MagicMock()
+        commit.parents = []
+
+        vault = Vault(directory="")
+        with patch.object(commit, "diff") as mock_diff:
+            vault._get_diffs(commit)
+
+        mock_diff.assert_called_with(NULL_TREE, create_patch=True)
