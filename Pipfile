@@ -15,6 +15,7 @@ langchain = "*"
 langchain-openai = "*"
 gitpython = "*"
 flask = "*"
+flask-cors = "*"
 
 [requires]
 python_version = "3.11"
