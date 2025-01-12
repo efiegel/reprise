@@ -1,4 +1,17 @@
 import React, { useEffect, useState } from 'react';
+import {
+  Container,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TextField,
+  Button,
+  CircularProgress,
+} from '@mui/material';
 import './App.css';
 
 function App() {
@@ -40,27 +53,43 @@ function App() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <CircularProgress />;
   }
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Reprise</h1>
-        <ul>
-          {motifs.map(motif => (
-            <li key={motif.uuid}>
-              <input
-                type="text"
-                value={motif.content}
-                onChange={e => handleChange(motif.uuid, e.target.value)}
-              />
-              <button onClick={() => handleSave(motif.uuid, motif.content)}>Save</button>
-            </li>
-          ))}
-        </ul>
-      </header>
-    </div>
+    <Container>
+      <h1>Reprise</h1>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>UUID</TableCell>
+              <TableCell>Content</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {motifs.map(motif => (
+              <TableRow key={motif.uuid}>
+                <TableCell>{motif.uuid}</TableCell>
+                <TableCell>
+                  <TextField
+                    fullWidth
+                    value={motif.content}
+                    onChange={e => handleChange(motif.uuid, e.target.value)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Button variant="contained" color="primary" onClick={() => handleSave(motif.uuid, motif.content)}>
+                    Save
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Container>
   );
 }
 
