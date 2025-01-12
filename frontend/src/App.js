@@ -95,6 +95,20 @@ function App() {
       });
   };
 
+  const handleDelete = (uuid) => {
+    fetch(`http://127.0.0.1:5000/motifs/${uuid}`, {
+      method: 'DELETE',
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Motif deleted:', data);
+        setMotifs(motifs.filter(motif => motif.uuid !== uuid));
+      })
+      .catch(error => {
+        console.error('Error deleting motif:', error);
+      });
+  };
+
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
@@ -134,6 +148,9 @@ function App() {
                   <TableCell>
                     <Button variant="contained" color="primary" onClick={() => handleSave(motif.uuid, motif.content)}>
                       Save
+                    </Button>
+                    <Button variant="contained" color="secondary" onClick={() => handleDelete(motif.uuid)}>
+                      Delete
                     </Button>
                   </TableCell>
                 </TableRow>

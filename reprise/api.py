@@ -29,14 +29,21 @@ def motifs():
         return jsonify({"uuid": motif.uuid, "content": motif.content})
 
 
-@app.route("/motifs/<uuid>", methods=["PUT"])
-def update_motif(uuid):
-    data = request.get_json()
-    with database_context():
-        motif = Motif.get(Motif.uuid == uuid)
-        motif.content = data["content"]
-        motif.save()
-    return jsonify({"uuid": motif.uuid, "content": motif.content})
+@app.route("/motifs/<uuid>", methods=["PUT", "DELETE"])
+def update_or_delete_motif(uuid):
+    if request.method == "PUT":
+        data = request.get_json()
+        with database_context():
+            motif = Motif.get(Motif.uuid == uuid)
+            motif.content = data["content"]
+            motif.save()
+        return jsonify({"uuid": motif.uuid, "content": motif.content})
+
+    if request.method == "DELETE":
+        with database_context():
+            motif = Motif.get(Motif.uuid == uuid)
+            motif.delete_instance()
+        return jsonify({"message": "Motif deleted"})
 
 
 if __name__ == "__main__":
