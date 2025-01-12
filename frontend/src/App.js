@@ -12,8 +12,8 @@ import {
   TableRow,
   Paper,
   TextField,
-  Button,
   CircularProgress,
+  Button,
 } from '@mui/material';
 import './App.css';
 
@@ -44,6 +44,7 @@ function App() {
   const [newMotifContent, setNewMotifContent] = useState('');
   const [snippets, setSnippets] = useState([]);
   const [noMoreDiffs, setNoMoreDiffs] = useState(false);
+  const [editingMotif, setEditingMotif] = useState(null);
   const [newSnippet, setNewSnippet] = useState('');
 
   useEffect(() => {
@@ -59,10 +60,6 @@ function App() {
       });
   }, []);
 
-  const handleChange = (uuid, content) => {
-    setMotifs(motifs.map(motif => (motif.uuid === uuid ? { ...motif, content } : motif)));
-  };
-
   const handleSave = (uuid, content) => {
     fetch(`http://127.0.0.1:5000/motifs/${uuid}`, {
       method: 'PUT',
@@ -74,6 +71,7 @@ function App() {
       .then(response => response.json())
       .then(data => {
         console.log('Motif updated:', data);
+        setEditingMotif(null);
       })
       .catch(error => {
         console.error('Error updating motif:', error);
@@ -171,6 +169,11 @@ function App() {
     setNewSnippet('');
   };
 
+  const handleMotifChange = (uuid, content) => {
+    setMotifs(motifs.map(motif => (motif.uuid === uuid ? { ...motif, content } : motif)));
+    setEditingMotif(uuid);
+  };
+
   if (isLoading) {
     return <CircularProgress />;
   }
@@ -201,13 +204,12 @@ function App() {
                       multiline
                       minRows={3}
                       value={motif.content}
-                      onChange={e => handleChange(motif.uuid, e.target.value)}
+                      onChange={e => handleMotifChange(motif.uuid, e.target.value)}
+                      onBlur={() => handleSave(motif.uuid, motif.content)}
+                      className={editingMotif === motif.uuid ? 'editing' : ''}
                     />
                   </TableCell>
                   <TableCell>
-                    <Button variant="contained" color="primary" onClick={() => handleSave(motif.uuid, motif.content)}>
-                      Save
-                    </Button>
                     <Button variant="contained" color="secondary" onClick={() => handleDelete(motif.uuid)}>
                       Delete
                     </Button>
