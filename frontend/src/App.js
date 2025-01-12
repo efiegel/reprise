@@ -44,6 +44,7 @@ function App() {
   const [newMotifContent, setNewMotifContent] = useState('');
   const [snippets, setSnippets] = useState([]);
   const [noMoreDiffs, setNoMoreDiffs] = useState(false);
+  const [newSnippet, setNewSnippet] = useState('');
 
   useEffect(() => {
     fetch('http://127.0.0.1:5000/motifs')
@@ -160,6 +161,16 @@ function App() {
     setSnippets(updatedSnippets);
   };
 
+  const handleDeleteSnippet = (index) => {
+    const updatedSnippets = snippets.filter((_, i) => i !== index);
+    setSnippets(updatedSnippets);
+  };
+
+  const handleAddSnippet = () => {
+    setSnippets([...snippets, newSnippet]);
+    setNewSnippet('');
+  };
+
   if (isLoading) {
     return <CircularProgress />;
   }
@@ -230,6 +241,7 @@ function App() {
                 <TableHead>
                   <TableRow>
                     <TableCell>Snippet</TableCell>
+                    <TableCell>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -244,11 +256,27 @@ function App() {
                           onChange={e => handleSnippetChange(index, e.target.value)}
                         />
                       </TableCell>
+                      <TableCell>
+                        <Button variant="contained" color="secondary" onClick={() => handleDeleteSnippet(index)}>
+                          Delete
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
+            <TextField
+              fullWidth
+              multiline
+              minRows={3}
+              label="New Snippet"
+              value={newSnippet}
+              onChange={e => setNewSnippet(e.target.value)}
+            />
+            <Button variant="contained" color="primary" onClick={handleAddSnippet}>
+              Add Snippet
+            </Button>
             <Button variant="contained" color="primary" onClick={handleValidateSnippets}>
               Save Validated Snippets
             </Button>
