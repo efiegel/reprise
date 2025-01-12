@@ -42,6 +42,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
   const [newMotifContent, setNewMotifContent] = useState('');
+  const [snippets, setSnippets] = useState([]);
+  const [validatedSnippets, setValidatedSnippets] = useState([]);
+  const [noMoreDiffs, setNoMoreDiffs] = useState(false);
 
   useEffect(() => {
     fetch('http://127.0.0.1:5000/motifs')
@@ -111,6 +114,56 @@ function App() {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+    if (newValue === 2) {
+      fetchNextDiff();
+    }
+  };
+
+  const fetchNextDiff = () => {
+    fetch('http://127.0.0.1:5000/diff-snippets')
+      .then(response => {
+        if (response.status === 404) {
+          setNoMoreDiffs(true);
+          return [];
+        }
+        return response.json();
+      })
+      .then(data => {
+        setSnippets(data);
+      })
+      .catch(error => {
+        console.error('Error fetching snippets:', error);
+      });
+  };
+
+  const handleValidateSnippets = () => {
+    fetch('http://127.0.0.1:5000/validate-snippets', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ snippets: validatedSnippets }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Snippets validated and saved:', data);
+        setValidatedSnippets([]);
+        setSnippets([]);
+        fetchNextDiff();
+      })
+      .catch(error => {
+        console.error('Error validating snippets:', error);
+      });
+  };
+
+  const handleSnippetChange = (index, content) => {
+    const updatedSnippets = [...snippets];
+    updatedSnippets[index] = content;
+    setSnippets(updatedSnippets);
+  };
+
+  const handleSnippetValidation = (snippet) => {
+    setValidatedSnippets([...validatedSnippets, snippet]);
   };
 
   if (isLoading) {
@@ -123,6 +176,7 @@ function App() {
       <Tabs value={tabValue} onChange={handleTabChange} aria-label="simple tabs example">
         <Tab label="Motifs" />
         <Tab label="Add Motif" />
+        <Tab label="Validate Snippets" />
       </Tabs>
       <TabPanel value={tabValue} index={0}>
         <TableContainer component={Paper}>
@@ -171,6 +225,47 @@ function App() {
         <Button variant="contained" color="primary" onClick={handleAddMotif}>
           Add Motif
         </Button>
+      </TabPanel>
+      <TabPanel value={tabValue} index={2}>
+        {noMoreDiffs ? (
+          <div>No more diffs to process.</div>
+        ) : (
+          <>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Snippet</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {snippets.map((snippet, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <TextField
+                          fullWidth
+                          multiline
+                          minRows={3}
+                          value={snippet}
+                          onChange={e => handleSnippetChange(index, e.target.value)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="contained" color="primary" onClick={() => handleSnippetValidation(snippet)}>
+                          Validate
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <Button variant="contained" color="primary" onClick={handleValidateSnippets}>
+              Save Validated Snippets
+            </Button>
+          </>
+        )}
       </TabPanel>
     </Container>
   );
