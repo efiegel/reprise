@@ -43,7 +43,6 @@ function App() {
   const [tabValue, setTabValue] = useState(0);
   const [newMotifContent, setNewMotifContent] = useState('');
   const [snippets, setSnippets] = useState([]);
-  const [validatedSnippets, setValidatedSnippets] = useState([]);
   const [noMoreDiffs, setNoMoreDiffs] = useState(false);
 
   useEffect(() => {
@@ -142,12 +141,11 @@ function App() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ snippets: validatedSnippets }),
+      body: JSON.stringify({ snippets }),
     })
       .then(response => response.json())
       .then(data => {
         console.log('Snippets validated and saved:', data);
-        setValidatedSnippets([]);
         setSnippets([]);
         fetchNextDiff();
       })
@@ -160,10 +158,6 @@ function App() {
     const updatedSnippets = [...snippets];
     updatedSnippets[index] = content;
     setSnippets(updatedSnippets);
-  };
-
-  const handleSnippetValidation = (snippet) => {
-    setValidatedSnippets([...validatedSnippets, snippet]);
   };
 
   if (isLoading) {
@@ -236,7 +230,6 @@ function App() {
                 <TableHead>
                   <TableRow>
                     <TableCell>Snippet</TableCell>
-                    <TableCell>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -250,11 +243,6 @@ function App() {
                           value={snippet}
                           onChange={e => handleSnippetChange(index, e.target.value)}
                         />
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="contained" color="primary" onClick={() => handleSnippetValidation(snippet)}>
-                          Validate
-                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
