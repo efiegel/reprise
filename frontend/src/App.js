@@ -63,7 +63,6 @@ function App() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>UUID</TableCell>
               <TableCell>Content</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -71,10 +70,11 @@ function App() {
           <TableBody>
             {motifs.map(motif => (
               <TableRow key={motif.uuid}>
-                <TableCell>{motif.uuid}</TableCell>
                 <TableCell>
                   <TextField
                     fullWidth
+                    multiline
+                    minRows={3}
                     value={motif.content}
                     onChange={e => handleChange(motif.uuid, e.target.value)}
                   />
