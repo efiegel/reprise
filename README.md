@@ -1,31 +1,13 @@
 # Reprise
-Leverage AI and spaced repetition to enhance learning retention. Intended for use with tools like [Obsidian](https://obsidian.md/).
-
-**Add snippets to database**
-```
-python -m scripts.input
-```
+Enhance learning retention with spaced repetition. This project contains a React app served by a Flask API.
 
 ## Setup
-### Dependencies
-Install python packages with [pipenv](https://pipenv.pypa.io/en/latest/):
+Install python dependencies with [pipenv](https://pipenv.pypa.io/en/latest/) and start the web server:
 ```
-pip install pipenv
-pipenv shell
-pipenv install
+flask --app reprise.api run
 ```
 
-Install tkinter GUI to interact with motifs before persistence to db:
-```sh
-brew install python-tk
+From the `/frontend` directory, install node dependencies with `npm install` and start the React app:
 ```
-You will likely will need to reinstall python after this (e.g. re-install from pyenv).
-
-### Environment
-This tool requires an [OpenAI API key](https://platform.openai.com/api-keys).
-
-Create an `.env` file as follows:
-```
-OPENAI_API_KEY=your-api-key
-VAULT_DIRECTORY=your-vault-path
+npm start
 ```
