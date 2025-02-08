@@ -1,19 +1,10 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from settings import VAULT_DIRECTORY
-
 from .db import Motif, database_context
-from .llm import Agent
-from .vault import Vault
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
-
-vault = Vault(VAULT_DIRECTORY)
-agent = Agent(model_name="gpt-4o-mini")
-diff_iterator = vault.diff_iterator()
-current_diff = None
 
 
 @app.route("/")
