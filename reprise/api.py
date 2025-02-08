@@ -7,11 +7,6 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
-
-
 @app.route("/motifs", methods=["GET", "POST"])
 def motifs():
     if request.method == "GET":
