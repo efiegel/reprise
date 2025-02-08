@@ -1,6 +1,5 @@
 from contextlib import contextmanager
 from datetime import datetime
-from pathlib import Path
 from uuid import uuid4
 
 from peewee import (
@@ -11,9 +10,7 @@ from peewee import (
     TextField,
 )
 
-from settings import VAULT_DIRECTORY
-
-db = SqliteDatabase(Path(VAULT_DIRECTORY) / ".reprise" / "reprise.db")
+db = SqliteDatabase("reprise.db")
 
 
 @contextmanager

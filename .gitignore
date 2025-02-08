@@ -13,3 +13,6 @@
 
 # VS Code settings
 /.vscode
+
+# sqlite databases
+*.db
