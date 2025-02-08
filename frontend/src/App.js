@@ -192,6 +192,8 @@ function App() {
             <TableHead>
               <TableRow>
                 <TableCell>Content</TableCell>
+                <TableCell>Created At</TableCell>
+                <TableCell>Citation</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -209,6 +211,8 @@ function App() {
                       className={editingMotif === motif.uuid ? 'editing' : ''}
                     />
                   </TableCell>
+                  <TableCell>{new Date(motif.created_at).toLocaleString()}</TableCell>
+                  <TableCell>{motif.citation}</TableCell>
                   <TableCell>
                     <Button variant="contained" color="secondary" onClick={() => handleDelete(motif.uuid)}>
                       Delete
