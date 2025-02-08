@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from reprise.repository import add_motif
 from settings import VAULT_DIRECTORY
 
 from .db import Motif, database_context
@@ -74,27 +73,6 @@ def update_or_delete_motif(uuid):
             motif = Motif.get(Motif.uuid == uuid)
             motif.delete_instance()
         return jsonify({"message": "Motif deleted"})
-
-
-@app.route("/diff-snippets", methods=["GET"])
-def get_diff_snippets():
-    global current_diff
-    try:
-        current_diff = next(diff_iterator)
-        snippets = agent.extract_information(current_diff)
-        return jsonify(snippets)
-    except StopIteration:
-        return jsonify({"message": "No more diffs"}), 404
-
-
-@app.route("/validate-snippets", methods=["POST"])
-def validate_snippets():
-    data = request.get_json()
-    validated_snippets = data.get("snippets", [])
-    with database_context():
-        for snippet in validated_snippets:
-            add_motif(snippet, None)
-    return jsonify({"message": "Snippets validated and saved"})
 
 
 if __name__ == "__main__":
