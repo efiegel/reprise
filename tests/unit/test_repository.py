@@ -10,3 +10,9 @@ class TestRepository:
         assert motif.created_at is not None
         assert motif.content == content
         assert motif.citation == citation
+
+    def test_get_motifs(self, session):
+        repository = MotifRepository(session)
+        repository.add_motif("Hello, World!", "my-citation")
+        repository.add_motif("Hello again, World!", "my-citation")
+        assert len(repository.get_motifs()) == 2

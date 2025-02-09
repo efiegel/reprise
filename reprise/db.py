@@ -27,7 +27,7 @@ def database_session():
 class Motif(Base):
     __tablename__ = "motif"
 
-    uuid = Column(String(36), primary_key=True, default=str(uuid4()))
+    uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     content = Column(Text, nullable=False)
     citation = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
