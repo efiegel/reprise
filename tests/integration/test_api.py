@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from flask import json
 
-from reprise.db import Motif, database_context
+from reprise.db import Motif, database_session
 
 
 class TestAPI:
@@ -54,7 +54,7 @@ class TestAPI:
         assert response.status_code == 200
         assert data["content"] == "Updated content"
 
-        with database_context() as new_session:
+        with database_session() as new_session:
             motif = new_session.query(Motif).filter_by(uuid=motif.uuid).one_or_none()
             assert motif.content == "Updated content"
 
@@ -73,5 +73,5 @@ class TestAPI:
         assert response.status_code == 200
         assert json.loads(response.data)["message"] == "Motif deleted"
 
-        with database_context() as new_session:
+        with database_session() as new_session:
             assert len(new_session.query(Motif).filter_by(uuid=motif.uuid).all()) == 0

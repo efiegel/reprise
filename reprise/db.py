@@ -16,7 +16,7 @@ SessionLocal = sessionmaker(bind=engine)
 
 
 @contextmanager
-def database_context():
+def database_session():
     session = SessionLocal()
     try:
         yield session
