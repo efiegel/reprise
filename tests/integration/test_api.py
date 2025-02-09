@@ -7,14 +7,10 @@ from reprise.db import Motif, database_context
 
 
 class TestAPI:
-    def test_get_motifs(self, client):
-        with database_context():
-            Motif.create(
-                uuid=str(uuid4()),
-                content="Test content",
-                citation="Test citation",
-                created_at=datetime.now(),
-            )
+    def test_get_motifs(self, session, client):
+        motif = Motif(content="Test content", citation="Test citation")
+        session.add(motif)
+        session.commit()
 
         response = client.get("/motifs")
         data = json.loads(response.data)
@@ -24,7 +20,7 @@ class TestAPI:
         assert data[0]["content"] == "Test content"
         assert data[0]["citation"] == "Test citation"
 
-    def test_add_motif(self, client):
+    def test_add_motif(self, session, client):
         response = client.post(
             "/motifs",
             data=json.dumps({"content": "New motif content"}),
@@ -35,18 +31,18 @@ class TestAPI:
         assert response.status_code == 200
         assert data["content"] == "New motif content"
 
-        with database_context():
-            motif = Motif.select().where(Motif.uuid == data["uuid"]).get()
-            assert motif.content == "New motif content"
+        motif = session.query(Motif).filter_by(uuid=data["uuid"]).one_or_none()
+        assert motif.content == "New motif content"
 
-    def test_update_motif(self, client):
-        with database_context():
-            motif = Motif.create(
-                uuid=str(uuid4()),
-                content="Old content",
-                citation="Old citation",
-                created_at=datetime.now(),
-            )
+    def test_update_motif(self, session, client):
+        motif = Motif(
+            uuid=str(uuid4()),
+            content="Old content",
+            citation="Old citation",
+            created_at=datetime.now(),
+        )
+        session.add(motif)
+        session.commit()
 
         response = client.put(
             f"/motifs/{motif.uuid}",
@@ -58,23 +54,24 @@ class TestAPI:
         assert response.status_code == 200
         assert data["content"] == "Updated content"
 
-        with database_context():
-            motif = Motif.select().where(Motif.uuid == motif.uuid).get()
+        with database_context() as new_session:
+            motif = new_session.query(Motif).filter_by(uuid=motif.uuid).one_or_none()
             assert motif.content == "Updated content"
 
-    def test_delete_motif(self, client):
-        with database_context():
-            motif = Motif.create(
-                uuid=str(uuid4()),
-                content="Content to delete",
-                citation="Citation to delete",
-                created_at=datetime.now(),
-            )
+    def test_delete_motif(self, session, client):
+        motif = Motif(
+            uuid=str(uuid4()),
+            content="Content to delete",
+            citation="Citation to delete",
+            created_at=datetime.now(),
+        )
+        session.add(motif)
+        session.commit()
 
         response = client.delete(f"/motifs/{motif.uuid}")
 
         assert response.status_code == 200
         assert json.loads(response.data)["message"] == "Motif deleted"
 
-        with database_context():
-            assert Motif.select().count() == 0
+        with database_context() as new_session:
+            assert len(new_session.query(Motif).filter_by(uuid=motif.uuid).all()) == 0

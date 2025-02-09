@@ -10,8 +10,8 @@ CORS(app)  # Enable CORS for all routes
 @app.route("/motifs", methods=["GET", "POST"])
 def motifs():
     if request.method == "GET":
-        with database_context():
-            motifs = Motif.select()
+        with database_context() as session:
+            motifs = session.query(Motif).all()
             motifs_list = [
                 {
                     "uuid": motif.uuid,
@@ -21,43 +21,46 @@ def motifs():
                 }
                 for motif in motifs
             ]
-        return jsonify(motifs_list)
+            return jsonify(motifs_list)
 
     if request.method == "POST":
         data = request.get_json()
-        with database_context():
-            motif = Motif.create(content=data["content"])
-        return jsonify(
-            {
-                "uuid": motif.uuid,
-                "content": motif.content,
-                "created_at": motif.created_at.isoformat(),
-                "citation": motif.citation,
-            }
-        )
+        with database_context() as session:
+            motif = Motif(content=data["content"])
+            session.add(motif)
+            session.commit()
+            return jsonify(
+                {
+                    "uuid": motif.uuid,
+                    "content": motif.content,
+                    "created_at": motif.created_at.isoformat(),
+                    "citation": motif.citation,
+                }
+            )
 
 
 @app.route("/motifs/<uuid>", methods=["PUT", "DELETE"])
 def update_or_delete_motif(uuid):
     if request.method == "PUT":
         data = request.get_json()
-        with database_context():
-            motif = Motif.get(Motif.uuid == uuid)
+        with database_context() as session:
+            motif = session.query(Motif).filter_by(uuid=uuid).one_or_none()
             motif.content = data["content"]
-            motif.save()
-        return jsonify(
-            {
-                "uuid": motif.uuid,
-                "content": motif.content,
-                "created_at": motif.created_at.isoformat(),
-                "citation": motif.citation,
-            }
-        )
+            session.commit()
+            return jsonify(
+                {
+                    "uuid": motif.uuid,
+                    "content": motif.content,
+                    "created_at": motif.created_at.isoformat(),
+                    "citation": motif.citation,
+                }
+            )
 
     if request.method == "DELETE":
-        with database_context():
-            motif = Motif.get(Motif.uuid == uuid)
-            motif.delete_instance()
+        with database_context() as session:
+            motif = session.query(Motif).filter_by(uuid=uuid).one_or_none()
+            session.delete(motif)
+            session.commit()
         return jsonify({"message": "Motif deleted"})
 
 

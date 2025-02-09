@@ -10,7 +10,6 @@ pytest-cov = "*"
 
 [packages]
 python-dotenv = "*"
-peewee = "*"
 flask = "*"
 flask-cors = "*"
 

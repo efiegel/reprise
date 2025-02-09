@@ -2,39 +2,29 @@ from contextlib import contextmanager
 from datetime import datetime
 from uuid import uuid4
 
-from peewee import (
-    CharField,
-    DateTimeField,
-    Model,
-    SqliteDatabase,
-    TextField,
-)
+from sqlalchemy import Column, DateTime, String, Text, create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-db = SqliteDatabase("reprise.db")
+Base = declarative_base()
+engine = create_engine("sqlite:///:memory:", echo=False)
+Base.metadata.create_all(engine)
+
+SessionLocal = sessionmaker(bind=engine)
 
 
 @contextmanager
-def database_context(database: SqliteDatabase = db):
+def database_context():
+    session = SessionLocal()
     try:
-        database.connect()
-        database.bind(all_models, bind_refs=False, bind_backrefs=False)
-        database.create_tables(all_models)
-        yield database
+        yield session
     finally:
-        if not database.is_closed():
-            database.close()
+        session.close()
 
 
-class BaseModel(Model):
-    class Meta:
-        database = None
+class Motif(Base):
+    __tablename__ = "motif"
 
-
-class Motif(BaseModel):
-    uuid = CharField(primary_key=True, max_length=36, default=uuid4)
-    content = TextField(null=False)
-    citation = TextField(null=True)
-    created_at = DateTimeField(default=datetime.now)
-
-
-all_models = [Motif]
+    uuid = Column(String(36), primary_key=True, default=str(uuid4()))
+    content = Column(Text, nullable=False)
+    citation = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
