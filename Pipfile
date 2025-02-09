@@ -7,15 +7,14 @@ verify_ssl = true
 pytest = "*"
 ruff = "*"
 pytest-cov = "*"
+pytest-env = "*"
+factory-boy = "*"
 
 [packages]
 python-dotenv = "*"
-peewee = "*"
-langchain = "*"
-langchain-openai = "*"
-gitpython = "*"
 flask = "*"
 flask-cors = "*"
+sqlalchemy = "*"
 
 [requires]
 python_version = "3.11"

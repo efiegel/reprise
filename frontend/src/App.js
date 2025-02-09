@@ -42,10 +42,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
   const [newMotifContent, setNewMotifContent] = useState('');
-  const [snippets, setSnippets] = useState([]);
-  const [noMoreDiffs, setNoMoreDiffs] = useState(false);
   const [editingMotif, setEditingMotif] = useState(null);
-  const [newSnippet, setNewSnippet] = useState('');
 
   useEffect(() => {
     fetch('http://127.0.0.1:5000/motifs')
@@ -112,61 +109,6 @@ function App() {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
-    if (newValue === 2) {
-      fetchNextDiff();
-    }
-  };
-
-  const fetchNextDiff = () => {
-    fetch('http://127.0.0.1:5000/diff-snippets')
-      .then(response => {
-        if (response.status === 404) {
-          setNoMoreDiffs(true);
-          return [];
-        }
-        return response.json();
-      })
-      .then(data => {
-        setSnippets(data);
-      })
-      .catch(error => {
-        console.error('Error fetching snippets:', error);
-      });
-  };
-
-  const handleValidateSnippets = () => {
-    fetch('http://127.0.0.1:5000/validate-snippets', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ snippets }),
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Snippets validated and saved:', data);
-        setSnippets([]);
-        fetchNextDiff();
-      })
-      .catch(error => {
-        console.error('Error validating snippets:', error);
-      });
-  };
-
-  const handleSnippetChange = (index, content) => {
-    const updatedSnippets = [...snippets];
-    updatedSnippets[index] = content;
-    setSnippets(updatedSnippets);
-  };
-
-  const handleDeleteSnippet = (index) => {
-    const updatedSnippets = snippets.filter((_, i) => i !== index);
-    setSnippets(updatedSnippets);
-  };
-
-  const handleAddSnippet = () => {
-    setSnippets([...snippets, newSnippet]);
-    setNewSnippet('');
   };
 
   const handleMotifChange = (uuid, content) => {
@@ -184,7 +126,6 @@ function App() {
       <Tabs value={tabValue} onChange={handleTabChange} aria-label="simple tabs example">
         <Tab label="Motifs" />
         <Tab label="Add Motif" />
-        <Tab label="Validate Snippets" />
       </Tabs>
       <TabPanel value={tabValue} index={0}>
         <TableContainer component={Paper}>
@@ -236,58 +177,6 @@ function App() {
         <Button variant="contained" color="primary" onClick={handleAddMotif}>
           Add Motif
         </Button>
-      </TabPanel>
-      <TabPanel value={tabValue} index={2}>
-        {noMoreDiffs ? (
-          <div>No more diffs to process.</div>
-        ) : (
-          <>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Snippet</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {snippets.map((snippet, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <TextField
-                          fullWidth
-                          multiline
-                          minRows={3}
-                          value={snippet}
-                          onChange={e => handleSnippetChange(index, e.target.value)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="contained" color="secondary" onClick={() => handleDeleteSnippet(index)}>
-                          Delete
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <TextField
-              fullWidth
-              multiline
-              minRows={3}
-              label="New Snippet"
-              value={newSnippet}
-              onChange={e => setNewSnippet(e.target.value)}
-            />
-            <Button variant="contained" color="primary" onClick={handleAddSnippet}>
-              Add Snippet
-            </Button>
-            <Button variant="contained" color="primary" onClick={handleValidateSnippets}>
-              Save Validated Snippets
-            </Button>
-          </>
-        )}
       </TabPanel>
     </Container>
   );

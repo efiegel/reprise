@@ -1,16 +1,20 @@
 import pytest
-from peewee import SqliteDatabase
 
-from reprise.db import all_models, database_context
-
-test_db = SqliteDatabase(":memory:")
+from reprise.api import app
+from reprise.db import Base, database_session, engine
 
 
 @pytest.fixture(scope="function", autouse=True)
-def db():
-    with database_context(test_db):
-        yield test_db
+def session():
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+    with database_session() as session:
+        yield session
+        session.rollback()
+        session.close()
 
-    test_db.connect()
-    test_db.drop_tables(all_models)
-    test_db.close()
+
+@pytest.fixture
+def client():
+    app.testing = True
+    return app.test_client()
