@@ -21,6 +21,7 @@ def database_session():
     try:
         yield session
     finally:
+        session.commit()
         session.close()
 
 

@@ -8,7 +8,7 @@ class MotifRepository:
     def add_motif(self, content: str, citation: str) -> Motif:
         motif = Motif(content=content, citation=citation)
         self.session.add(motif)
-        self.session.commit()
+        self.session.flush()
         return motif
 
     def get_motif(self, uuid: str) -> Motif:
@@ -20,10 +20,10 @@ class MotifRepository:
     def update_motif_content(self, uuid: str, content: dict) -> Motif:
         motif = self.get_motif(uuid)
         motif.content = content
-        self.session.commit()
+        self.session.flush()
         return motif
 
     def delete_motif(self, uuid: str) -> None:
         motif = self.get_motif(uuid)
         self.session.delete(motif)
-        self.session.commit()
+        self.session.flush()
