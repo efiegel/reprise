@@ -4,7 +4,7 @@ from reprise.api import app
 from reprise.db import Base, database_context, engine
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="function", autouse=True)
 def session():
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
