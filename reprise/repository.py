@@ -1,4 +1,4 @@
-from .db import Motif
+from reprise.db import Motif
 
 
 class MotifRepository:
@@ -11,6 +11,19 @@ class MotifRepository:
         self.session.commit()
         return motif
 
-    def get_motifs(self):
-        motifs = self.session.query(Motif).all()
-        return [{"uuid": m.uuid, "content": m.content} for m in motifs]
+    def get_motif(self, uuid: str) -> Motif:
+        return self.session.query(Motif).filter_by(uuid=uuid).one_or_none()
+
+    def get_motifs(self) -> list[Motif]:
+        return self.session.query(Motif).all()
+
+    def update_motif_content(self, uuid: str, content: dict) -> Motif:
+        motif = self.get_motif(uuid)
+        motif.content = content
+        self.session.commit()
+        return motif
+
+    def delete_motif(self, uuid: str) -> None:
+        motif = self.get_motif(uuid)
+        self.session.delete(motif)
+        self.session.commit()

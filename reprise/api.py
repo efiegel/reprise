@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from .db import Motif, database_session
+from reprise.db import database_session
+from reprise.repository import MotifRepository
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -11,7 +12,8 @@ CORS(app)  # Enable CORS for all routes
 def motifs():
     if request.method == "GET":
         with database_session() as session:
-            motifs = session.query(Motif).all()
+            repository = MotifRepository(session)
+            motifs = repository.get_motifs()
             motifs_list = [
                 {
                     "uuid": motif.uuid,
@@ -26,9 +28,8 @@ def motifs():
     if request.method == "POST":
         data = request.get_json()
         with database_session() as session:
-            motif = Motif(content=data["content"])
-            session.add(motif)
-            session.commit()
+            repository = MotifRepository(session)
+            motif = repository.add_motif(data.get("content"), data.get("citation"))
             return jsonify(
                 {
                     "uuid": motif.uuid,
@@ -44,9 +45,8 @@ def update_or_delete_motif(uuid):
     if request.method == "PUT":
         data = request.get_json()
         with database_session() as session:
-            motif = session.query(Motif).filter_by(uuid=uuid).one_or_none()
-            motif.content = data["content"]
-            session.commit()
+            repository = MotifRepository(session)
+            motif = repository.update_motif_content(uuid, data["content"])
             return jsonify(
                 {
                     "uuid": motif.uuid,
@@ -58,7 +58,6 @@ def update_or_delete_motif(uuid):
 
     if request.method == "DELETE":
         with database_session() as session:
-            motif = session.query(Motif).filter_by(uuid=uuid).one_or_none()
-            session.delete(motif)
-            session.commit()
+            repository = MotifRepository(session)
+            repository.delete_motif(uuid)
         return jsonify({"message": "Motif deleted"})
