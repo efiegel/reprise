@@ -13,6 +13,7 @@ python-dotenv = "*"
 flask = "*"
 flask-cors = "*"
 pytest-env = "*"
+sqlalchemy = "*"
 
 [requires]
 python_version = "3.11"
