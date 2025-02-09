@@ -8,6 +8,7 @@ pytest = "*"
 ruff = "*"
 pytest-cov = "*"
 pytest-env = "*"
+factory-boy = "*"
 
 [packages]
 python-dotenv = "*"
