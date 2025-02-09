@@ -62,7 +62,3 @@ def update_or_delete_motif(uuid):
             session.delete(motif)
             session.commit()
         return jsonify({"message": "Motif deleted"})
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
