@@ -7,12 +7,12 @@ verify_ssl = true
 pytest = "*"
 ruff = "*"
 pytest-cov = "*"
+pytest-env = "*"
 
 [packages]
 python-dotenv = "*"
 flask = "*"
 flask-cors = "*"
-pytest-env = "*"
 sqlalchemy = "*"
 
 [requires]
