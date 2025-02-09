@@ -12,6 +12,7 @@ pytest-cov = "*"
 python-dotenv = "*"
 flask = "*"
 flask-cors = "*"
+pytest-env = "*"
 
 [requires]
 python_version = "3.11"
