@@ -10,7 +10,6 @@ database = os.getenv("DATABASE_URL", "sqlite:///reprise.db")
 engine = create_engine(database, echo=False)
 
 Base = declarative_base()
-Base.metadata.create_all(engine)
 
 SessionLocal = sessionmaker(bind=engine)
 
@@ -31,4 +30,4 @@ class Motif(Base):
     uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     content = Column(Text, nullable=False)
     citation = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
