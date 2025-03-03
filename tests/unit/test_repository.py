@@ -52,6 +52,13 @@ class TestCitationRepository:
     def repository(self, session):
         return CitationRepository(session)
 
+    @pytest.fixture
+    def citation(self, session):
+        return citation_factory(session=session).create()
+
+    def test_get_citation(self, repository, citation):
+        assert repository.get_citation(citation.uuid) == citation
+
     def test_add_citation(self, repository):
         title = "Hello, World!"
         citation = repository.add_citation(title)

@@ -39,6 +39,9 @@ class CitationRepository:
     def __init__(self, session):
         self.session = session
 
+    def get_citation(self, uuid: str) -> Citation:
+        return self.session.query(Citation).filter_by(uuid=uuid).one_or_none()
+
     def add_citation(self, title: str) -> Citation:
         citation = Citation(title=title)
         self.session.add(citation)
