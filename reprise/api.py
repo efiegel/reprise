@@ -19,6 +19,7 @@ def motifs():
                     "uuid": motif.uuid,
                     "content": motif.content,
                     "created_at": motif.created_at.isoformat(),
+                    "citation": motif.citation.title if motif.citation else None,
                 }
                 for motif in motifs
             ]
