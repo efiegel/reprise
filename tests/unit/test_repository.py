@@ -20,6 +20,11 @@ class TestMotifRepository:
         assert motif.created_at is not None
         assert motif.content == content
 
+    def test_add_motif_with_citation(self, repository, session):
+        citation = citation_factory(session=session).create()
+        motif = repository.add_motif("Hello, World!", citation)
+        assert motif.citation == citation
+
     def test_get_motif(self, repository, motif):
         assert repository.get_motif(motif.uuid) == motif
 

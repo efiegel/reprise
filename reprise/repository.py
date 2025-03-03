@@ -5,8 +5,8 @@ class MotifRepository:
     def __init__(self, session):
         self.session = session
 
-    def add_motif(self, content: str) -> Motif:
-        motif = Motif(content=content)
+    def add_motif(self, content: str, citation: Citation = None) -> Motif:
+        motif = Motif(content=content, citation=citation)
         self.session.add(motif)
         self.session.flush()
         return motif
