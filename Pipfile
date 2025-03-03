@@ -15,6 +15,7 @@ python-dotenv = "*"
 flask = "*"
 flask-cors = "*"
 sqlalchemy = "*"
+alembic = "*"
 
 [requires]
 python_version = "3.11"
