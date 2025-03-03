@@ -1,4 +1,4 @@
-from reprise.db import Motif
+from reprise.db import Citation, Motif
 
 
 class MotifRepository:
@@ -27,3 +27,20 @@ class MotifRepository:
         motif = self.get_motif(uuid)
         self.session.delete(motif)
         self.session.flush()
+
+    def add_citation(self, motif_uuid: str, citation: Citation) -> Motif:
+        motif = self.get_motif(motif_uuid)
+        motif.citation = citation
+        self.session.flush()
+        return motif
+
+
+class CitationRepository:
+    def __init__(self, session):
+        self.session = session
+
+    def add_citation(self, title: str) -> Citation:
+        citation = Citation(title=title)
+        self.session.add(citation)
+        self.session.flush()
+        return citation

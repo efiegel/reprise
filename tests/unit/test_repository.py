@@ -1,10 +1,10 @@
 import pytest
 
-from reprise.repository import MotifRepository
-from tests.factories import motif_factory
+from reprise.repository import CitationRepository, MotifRepository
+from tests.factories import citation_factory, motif_factory
 
 
-class TestRepository:
+class TestMotifRepository:
     @pytest.fixture
     def repository(self, session):
         return MotifRepository(session)
@@ -35,3 +35,21 @@ class TestRepository:
     def test_delete_motif(self, repository, motif):
         repository.delete_motif(motif.uuid)
         assert repository.get_motif(motif.uuid) is None
+
+    def test_add_citation(self, repository, motif, session):
+        citation = citation_factory(session=session).create()
+        motif = repository.add_citation(motif.uuid, citation)
+        assert motif.citation == citation
+
+
+class TestCitationRepository:
+    @pytest.fixture
+    def repository(self, session):
+        return CitationRepository(session)
+
+    def test_add_citation(self, repository):
+        title = "Hello, World!"
+        citation = repository.add_citation(title)
+        assert citation.uuid is not None
+        assert citation.created_at is not None
+        assert citation.title == title
