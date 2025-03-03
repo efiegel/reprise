@@ -14,12 +14,11 @@ class TestRepository:
         return motif_factory(session=session).create()
 
     def test_add_motif(self, repository):
-        content, citation = "Hello, World!", "my-citation"
-        motif = repository.add_motif("Hello, World!", "my-citation")
+        content = "Hello, World!"
+        motif = repository.add_motif("Hello, World!")
         assert motif.uuid is not None
         assert motif.created_at is not None
         assert motif.content == content
-        assert motif.citation == citation
 
     def test_get_motif(self, repository, motif):
         assert repository.get_motif(motif.uuid) == motif

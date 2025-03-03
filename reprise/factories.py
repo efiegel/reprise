@@ -13,7 +13,6 @@ def motif_factory(session):
 
         uuid = factory.Faker("uuid4")
         content = factory.Faker("text")
-        citation = factory.Faker("text")
         created_at = factory.Faker("date_time")
 
     return _MotifFactory
