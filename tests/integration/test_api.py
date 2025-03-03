@@ -17,7 +17,6 @@ class TestAPI:
         assert response.status_code == 200
         assert len(data) == 1
         assert data[0]["content"] == motif.content
-        assert data[0]["citation"] == motif.citation
 
     def test_add_motif(self, client):
         response = client.post(

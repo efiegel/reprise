@@ -19,7 +19,6 @@ def motifs():
                     "uuid": motif.uuid,
                     "content": motif.content,
                     "created_at": motif.created_at.isoformat(),
-                    "citation": motif.citation,
                 }
                 for motif in motifs
             ]
@@ -29,13 +28,12 @@ def motifs():
         data = request.get_json()
         with database_session() as session:
             repository = MotifRepository(session)
-            motif = repository.add_motif(data.get("content"), data.get("citation"))
+            motif = repository.add_motif(data.get("content"))
             return jsonify(
                 {
                     "uuid": motif.uuid,
                     "content": motif.content,
                     "created_at": motif.created_at.isoformat(),
-                    "citation": motif.citation,
                 }
             )
 
@@ -52,7 +50,6 @@ def update_or_delete_motif(uuid):
                     "uuid": motif.uuid,
                     "content": motif.content,
                     "created_at": motif.created_at.isoformat(),
-                    "citation": motif.citation,
                 }
             )
 
