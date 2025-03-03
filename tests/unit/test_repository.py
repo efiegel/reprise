@@ -1,7 +1,7 @@
 import pytest
 
-from reprise.factories import motif_factory
 from reprise.repository import MotifRepository
+from tests.factories import motif_factory
 
 
 class TestRepository:

@@ -2,7 +2,7 @@ import pytest
 from flask import json
 
 from reprise.db import Motif, database_session
-from reprise.factories import motif_factory
+from tests.factories import motif_factory
 
 
 class TestAPI:
