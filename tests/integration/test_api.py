@@ -72,6 +72,19 @@ class TestAPI:
             motif = session.query(Motif).filter_by(uuid=motif.uuid).one_or_none()
             assert motif.content == "Updated content"
 
+    def test_update_motif_invalid_citation(self, client, motif):
+        response = client.put(
+            f"/motifs/{motif.uuid}",
+            data=json.dumps({"content": "Updated content", "citation": "invalid!"}),
+            content_type="application/json",
+        )
+
+        assert response.status_code == 404
+
+        with database_session() as session:
+            motif = session.query(Motif).filter_by(uuid=motif.uuid).one_or_none()
+            assert motif.content != "Updated content"
+
     def test_delete_motif(self, client, motif):
         response = client.delete(f"/motifs/{motif.uuid}")
 

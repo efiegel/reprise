@@ -52,15 +52,21 @@ def update_or_delete_motif(uuid):
     if request.method == "PUT":
         data = request.get_json()
         with database_session() as session:
-            repository = MotifRepository(session)
-            motif = repository.update_motif_content(uuid, data["content"])
             citation_title = data.get("citation")
             if citation_title:
                 citation_repository = CitationRepository(session)
                 citation = citation_repository.get_citation_by_title(citation_title)
                 if not citation:
-                    citation = citation_repository.add_citation(citation_title)
+                    return jsonify(
+                        {"error": f"Citation {citation_title} not found"}
+                    ), 404
+
+            repository = MotifRepository(session)
+            motif = repository.update_motif_content(uuid, data["content"])
+
+            if citation_title:
                 motif = repository.add_citation(motif.uuid, citation)
+
             return jsonify(
                 {
                     "uuid": motif.uuid,
