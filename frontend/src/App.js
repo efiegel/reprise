@@ -42,6 +42,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
   const [newMotifContent, setNewMotifContent] = useState('');
+  const [newCitationTitle, setNewCitationTitle] = useState('');
   const [editingMotif, setEditingMotif] = useState(null);
 
   useEffect(() => {
@@ -93,6 +94,23 @@ function App() {
       });
   };
 
+  const handleAddCitation = () => {
+    fetch('http://127.0.0.1:5000/citations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: newCitationTitle }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        setNewCitationTitle('');
+      })
+      .catch(error => {
+        console.error('Error adding citation:', error);
+      });
+  };
+
   const handleDelete = (uuid) => {
     fetch(`http://127.0.0.1:5000/motifs/${uuid}`, {
       method: 'DELETE',
@@ -126,6 +144,7 @@ function App() {
       <Tabs value={tabValue} onChange={handleTabChange} aria-label="simple tabs example">
         <Tab label="Motifs" />
         <Tab label="Add Motif" />
+        <Tab label="Add Citation" />
       </Tabs>
       <TabPanel value={tabValue} index={0}>
         <TableContainer component={Paper}>
@@ -176,6 +195,17 @@ function App() {
         />
         <Button variant="contained" color="primary" onClick={handleAddMotif}>
           Add Motif
+        </Button>
+      </TabPanel>
+      <TabPanel value={tabValue} index={2}>
+        <TextField
+          fullWidth
+          label="New Citation Title"
+          value={newCitationTitle}
+          onChange={e => setNewCitationTitle(e.target.value)}
+        />
+        <Button variant="contained" color="primary" onClick={handleAddCitation}>
+          Add Citation
         </Button>
       </TabPanel>
     </Container>
