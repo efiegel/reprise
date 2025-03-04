@@ -98,6 +98,14 @@ class TestAPI:
             )
             assert citation.title == "New citation title"
 
+    def test_get_citations(self, client, citation):
+        response = client.get("/citations")
+        data = json.loads(response.data)
+
+        assert response.status_code == 200
+        assert len(data) == 1
+        assert data[0]["title"] == citation.title
+
     def test_add_citation_to_motif(self, client, motif, citation):
         response = client.put(
             f"/motifs/{motif.uuid}",

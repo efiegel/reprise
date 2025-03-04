@@ -77,15 +77,30 @@ def update_or_delete_motif(uuid):
         return jsonify({"message": "Motif deleted"})
 
 
-@app.route("/citations", methods=["POST"])
+@app.route("/citations", methods=["GET", "POST"])
 def create_citation():
-    data = request.get_json()
-    with database_session() as session:
-        repository = CitationRepository(session)
-        citation = repository.add_citation(data.get("title"))
-        return jsonify(
-            {
-                "uuid": citation.uuid,
-                "title": citation.title,
-            }
-        )
+    if request.method == "GET":
+        with database_session() as session:
+            repository = CitationRepository(session)
+            citations = repository.get_citations()
+            citations_list = [
+                {
+                    "uuid": citation.uuid,
+                    "title": citation.title,
+                    "created_at": citation.created_at.isoformat(),
+                }
+                for citation in citations
+            ]
+            return jsonify(citations_list)
+
+    if request.method == "POST":
+        data = request.get_json()
+        with database_session() as session:
+            repository = CitationRepository(session)
+            citation = repository.add_citation(data.get("title"))
+            return jsonify(
+                {
+                    "uuid": citation.uuid,
+                    "title": citation.title,
+                }
+            )

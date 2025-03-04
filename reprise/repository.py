@@ -42,6 +42,9 @@ class CitationRepository:
     def get_citation(self, uuid: str) -> Citation:
         return self.session.query(Citation).filter_by(uuid=uuid).one_or_none()
 
+    def get_citations(self) -> list[Citation]:
+        return self.session.query(Citation).all()
+
     def add_citation(self, title: str) -> Citation:
         citation = Citation(title=title)
         self.session.add(citation)

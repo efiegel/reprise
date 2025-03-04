@@ -59,6 +59,10 @@ class TestCitationRepository:
     def test_get_citation(self, repository, citation):
         assert repository.get_citation(citation.uuid) == citation
 
+    def test_get_citations(self, session, repository):
+        citation_factory(session=session).create_batch(2)
+        assert len(repository.get_citations()) == 2
+
     def test_add_citation(self, repository):
         title = "Hello, World!"
         citation = repository.add_citation(title)
