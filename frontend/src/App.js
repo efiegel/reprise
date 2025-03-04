@@ -14,6 +14,10 @@ import {
   TextField,
   CircularProgress,
   Button,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
 } from '@mui/material';
 import './App.css';
 
@@ -39,21 +43,34 @@ function TabPanel(props) {
 
 function App() {
   const [motifs, setMotifs] = useState([]);
+  const [citations, setCitations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
   const [newMotifContent, setNewMotifContent] = useState('');
+  const [selectedCitation, setSelectedCitation] = useState('');
+  const [newCitationTitle, setNewCitationTitle] = useState('');
   const [editingMotif, setEditingMotif] = useState(null);
 
   useEffect(() => {
     fetch('http://127.0.0.1:5000/motifs')
       .then(response => response.json())
       .then(data => {
-        setMotifs(data);
+        const sortedMotifs = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setMotifs(sortedMotifs);
         setIsLoading(false);
       })
       .catch(error => {
         console.error('Error fetching motifs:', error);
         setIsLoading(false);
+      });
+
+    fetch('http://127.0.0.1:5000/citations')
+      .then(response => response.json())
+      .then(data => {
+        setCitations(data);
+      })
+      .catch(error => {
+        console.error('Error fetching citations:', error);
       });
   }, []);
 
@@ -81,15 +98,34 @@ function App() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ content: newMotifContent }),
+      body: JSON.stringify({ content: newMotifContent, citation: selectedCitation }),
     })
       .then(response => response.json())
       .then(data => {
-        setMotifs([...motifs, data]);
+        const updatedMotifs = [data, ...motifs];
+        setMotifs(updatedMotifs);
         setNewMotifContent('');
       })
       .catch(error => {
         console.error('Error adding motif:', error);
+      });
+  };
+
+  const handleAddCitation = () => {
+    fetch('http://127.0.0.1:5000/citations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: newCitationTitle }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        setNewCitationTitle('');
+        setCitations([...citations, data]);
+      })
+      .catch(error => {
+        console.error('Error adding citation:', error);
       });
   };
 
@@ -126,6 +162,7 @@ function App() {
       <Tabs value={tabValue} onChange={handleTabChange} aria-label="simple tabs example">
         <Tab label="Motifs" />
         <Tab label="Add Motif" />
+        <Tab label="Add Citation" />
       </Tabs>
       <TabPanel value={tabValue} index={0}>
         <TableContainer component={Paper}>
@@ -174,8 +211,37 @@ function App() {
           value={newMotifContent}
           onChange={e => setNewMotifContent(e.target.value)}
         />
+        <FormControl fullWidth>
+          <InputLabel id="citation-select-label">Citation</InputLabel>
+          <Select
+            labelId="citation-select-label"
+            value={selectedCitation}
+            onChange={e => setSelectedCitation(e.target.value)}
+            displayEmpty
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {citations.map(citation => (
+              <MenuItem key={citation.uuid} value={citation.title}>
+                {citation.title}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <Button variant="contained" color="primary" onClick={handleAddMotif}>
           Add Motif
+        </Button>
+      </TabPanel>
+      <TabPanel value={tabValue} index={2}>
+        <TextField
+          fullWidth
+          label="New Citation Title"
+          value={newCitationTitle}
+          onChange={e => setNewCitationTitle(e.target.value)}
+        />
+        <Button variant="contained" color="primary" onClick={handleAddCitation}>
+          Add Citation
         </Button>
       </TabPanel>
     </Container>

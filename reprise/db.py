@@ -4,13 +4,13 @@ from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import Column, DateTime, String, Text, create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from sqlalchemy.schema import ForeignKey
 
 database = os.getenv("DATABASE_URL", "sqlite:///reprise.db")
 engine = create_engine(database, echo=False)
 
 Base = declarative_base()
-Base.metadata.create_all(engine)
 
 SessionLocal = sessionmaker(bind=engine)
 
@@ -30,5 +30,15 @@ class Motif(Base):
 
     uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     content = Column(Text, nullable=False)
-    citation = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.now)
+    citation_uuid = Column(String(36), ForeignKey("citation.uuid"), nullable=True)
+
+    citation = relationship("Citation", backref="motifs")
+
+
+class Citation(Base):
+    __tablename__ = "citation"
+
+    uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    title = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.now)

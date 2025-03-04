@@ -11,3 +11,9 @@ From the `/frontend` directory, install node dependencies with `npm install` and
 ```
 npm start
 ```
+
+### Database migrations
+This project uses alembic for migrations. Run them from the console like so:
+```
+PYTHONPATH=. alembic <...>
+```
