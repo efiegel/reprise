@@ -47,3 +47,6 @@ class CitationRepository:
         self.session.add(citation)
         self.session.flush()
         return citation
+
+    def get_citation_by_title(self, title: str) -> Citation:
+        return self.session.query(Citation).filter_by(title=title).one_or_none()

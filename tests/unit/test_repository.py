@@ -65,3 +65,6 @@ class TestCitationRepository:
         assert citation.uuid is not None
         assert citation.created_at is not None
         assert citation.title == title
+
+    def test_get_citation_by_title(self, repository, citation):
+        assert repository.get_citation_by_title(citation.title) == citation
