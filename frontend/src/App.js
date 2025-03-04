@@ -103,7 +103,6 @@ function App() {
       .then(data => {
         setMotifs([...motifs, data]);
         setNewMotifContent('');
-        setSelectedCitation('');
       })
       .catch(error => {
         console.error('Error adding motif:', error);
