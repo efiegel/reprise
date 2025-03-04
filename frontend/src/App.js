@@ -55,7 +55,8 @@ function App() {
     fetch('http://127.0.0.1:5000/motifs')
       .then(response => response.json())
       .then(data => {
-        setMotifs(data);
+        const sortedMotifs = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setMotifs(sortedMotifs);
         setIsLoading(false);
       })
       .catch(error => {
@@ -101,7 +102,8 @@ function App() {
     })
       .then(response => response.json())
       .then(data => {
-        setMotifs([...motifs, data]);
+        const updatedMotifs = [data, ...motifs];
+        setMotifs(updatedMotifs);
         setNewMotifContent('');
       })
       .catch(error => {
