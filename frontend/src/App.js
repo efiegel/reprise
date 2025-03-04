@@ -14,6 +14,10 @@ import {
   TextField,
   CircularProgress,
   Button,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
 } from '@mui/material';
 import './App.css';
 
@@ -39,9 +43,11 @@ function TabPanel(props) {
 
 function App() {
   const [motifs, setMotifs] = useState([]);
+  const [citations, setCitations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
   const [newMotifContent, setNewMotifContent] = useState('');
+  const [selectedCitation, setSelectedCitation] = useState('');
   const [newCitationTitle, setNewCitationTitle] = useState('');
   const [editingMotif, setEditingMotif] = useState(null);
 
@@ -55,6 +61,15 @@ function App() {
       .catch(error => {
         console.error('Error fetching motifs:', error);
         setIsLoading(false);
+      });
+
+    fetch('http://127.0.0.1:5000/citations')
+      .then(response => response.json())
+      .then(data => {
+        setCitations(data);
+      })
+      .catch(error => {
+        console.error('Error fetching citations:', error);
       });
   }, []);
 
@@ -82,12 +97,13 @@ function App() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ content: newMotifContent }),
+      body: JSON.stringify({ content: newMotifContent, citation: selectedCitation }),
     })
       .then(response => response.json())
       .then(data => {
         setMotifs([...motifs, data]);
         setNewMotifContent('');
+        setSelectedCitation('');
       })
       .catch(error => {
         console.error('Error adding motif:', error);
@@ -105,6 +121,7 @@ function App() {
       .then(response => response.json())
       .then(data => {
         setNewCitationTitle('');
+        setCitations([...citations, data]);
       })
       .catch(error => {
         console.error('Error adding citation:', error);
@@ -193,6 +210,24 @@ function App() {
           value={newMotifContent}
           onChange={e => setNewMotifContent(e.target.value)}
         />
+        <FormControl fullWidth>
+          <InputLabel id="citation-select-label">Citation</InputLabel>
+          <Select
+            labelId="citation-select-label"
+            value={selectedCitation}
+            onChange={e => setSelectedCitation(e.target.value)}
+            displayEmpty
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {citations.map(citation => (
+              <MenuItem key={citation.uuid} value={citation.title}>
+                {citation.title}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <Button variant="contained" color="primary" onClick={handleAddMotif}>
           Add Motif
         </Button>
