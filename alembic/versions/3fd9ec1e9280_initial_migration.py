@@ -25,7 +25,6 @@ def upgrade():
         "motif",
         sa.Column("uuid", sa.String(length=36), nullable=False),
         sa.Column("content", sa.Text(), nullable=False),
-        sa.Column("category", sa.Text(), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(),
