@@ -30,7 +30,7 @@ class Motif(Base):
 
     uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
     citation_uuid = Column(String(36), ForeignKey("citation.uuid"), nullable=True)
 
     citation = relationship("Citation", backref="motifs")

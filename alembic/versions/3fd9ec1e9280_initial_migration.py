@@ -28,7 +28,7 @@ def upgrade():
         sa.Column(
             "created_at",
             sa.DateTime(),
-            nullable=True,
+            nullable=False,
             server_default=sa.func.current_timestamp(),
         ),
         sa.PrimaryKeyConstraint("uuid"),
