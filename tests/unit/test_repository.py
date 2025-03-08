@@ -1,6 +1,6 @@
 import pytest
 
-from reprise.repository import CitationRepository, MotifRepository
+from reprise.repository import CitationRepository, MotifRepository, ReprisalRepository
 from tests.factories import citation_factory, motif_factory
 
 
@@ -72,3 +72,17 @@ class TestCitationRepository:
 
     def test_get_citation_by_title(self, repository, citation):
         assert repository.get_citation_by_title(citation.title) == citation
+
+
+class TestReprisalRepository:
+    @pytest.fixture
+    def repository(self, session):
+        return ReprisalRepository(session)
+
+    def test_add_reprisal(self, repository, session):
+        motif = motif_factory(session=session).create()
+
+        reprisal = repository.add_reprisal(motif.uuid)
+        assert reprisal.uuid is not None
+        assert reprisal.created_at is not None
+        assert reprisal.motif == motif

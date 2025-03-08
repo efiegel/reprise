@@ -42,3 +42,13 @@ class Citation(Base):
     uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     title = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.now)
+
+
+class Reprisal(Base):
+    __tablename__ = "reprisal"
+
+    uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    motif_uuid = Column(String(36), ForeignKey("motif.uuid"), nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+
+    motif = relationship("Motif", backref="reprisals")
