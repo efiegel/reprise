@@ -24,7 +24,7 @@ def upgrade() -> None:
         "citation",
         sa.Column("uuid", sa.String(length=36), nullable=False),
         sa.Column("title", sa.Text(), nullable=False),
-        sa.Column("created_at", sa.DateTime(), nullable=True),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("uuid"),
     )
 
