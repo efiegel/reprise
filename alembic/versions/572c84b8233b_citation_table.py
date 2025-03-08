@@ -28,6 +28,9 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("uuid"),
     )
 
+    # enable foreign key constraints (not default in sqlite)
+    op.execute("PRAGMA foreign_keys = ON;")
+
     # sqlite doesn't support adding an fk to an existing table: recreate and copy data
     op.create_table(
         "motif_with_citation",
