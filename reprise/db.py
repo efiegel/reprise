@@ -49,6 +49,7 @@ class Reprisal(Base):
 
     uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     motif_uuid = Column(String(36), ForeignKey("motif.uuid"), nullable=False)
+    set_uuid = Column(String(36), nullable=False)
     created_at = Column(DateTime, default=datetime.now, nullable=False)
 
     motif = relationship("Motif", backref="reprisals")

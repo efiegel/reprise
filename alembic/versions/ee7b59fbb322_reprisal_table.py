@@ -25,6 +25,7 @@ def upgrade() -> None:
         "reprisal",
         sa.Column("uuid", sa.String(length=36), nullable=False),
         sa.Column("motif_uuid", sa.String(length=36), nullable=False),
+        sa.Column("set_uuid", sa.String(length=36), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["motif_uuid"],

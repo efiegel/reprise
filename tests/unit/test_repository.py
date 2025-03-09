@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 
 from reprise.repository import CitationRepository, MotifRepository, ReprisalRepository
@@ -81,8 +83,10 @@ class TestReprisalRepository:
 
     def test_add_reprisal(self, repository, session):
         motif = motif_factory(session=session).create()
+        set_uuid = str(uuid4())
 
-        reprisal = repository.add_reprisal(motif.uuid)
+        reprisal = repository.add_reprisal(motif.uuid, set_uuid)
         assert reprisal.uuid is not None
         assert reprisal.created_at is not None
+        assert reprisal.set_uuid == set_uuid
         assert reprisal.motif == motif
