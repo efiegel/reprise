@@ -1,4 +1,4 @@
-from reprise.db import Citation, Motif
+from reprise.db import Citation, Motif, Reprisal
 
 
 class MotifRepository:
@@ -53,3 +53,14 @@ class CitationRepository:
 
     def get_citation_by_title(self, title: str) -> Citation:
         return self.session.query(Citation).filter_by(title=title).one_or_none()
+
+
+class ReprisalRepository:
+    def __init__(self, session):
+        self.session = session
+
+    def add_reprisal(self, motif_uuid: str, set_uuid: str) -> Reprisal:
+        reprisal = Reprisal(motif_uuid=motif_uuid, set_uuid=set_uuid)
+        self.session.add(reprisal)
+        self.session.flush()
+        return reprisal

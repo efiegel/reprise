@@ -50,6 +50,8 @@ function App() {
   const [selectedCitation, setSelectedCitation] = useState('');
   const [newCitationTitle, setNewCitationTitle] = useState('');
   const [editingMotif, setEditingMotif] = useState(null);
+  const [reprisedMotifs, setReprisedMotifs] = useState([]);
+  const [repriseLoading, setRepriseLoading] = useState(false);
 
   useEffect(() => {
     fetch('http://127.0.0.1:5000/motifs')
@@ -152,6 +154,27 @@ function App() {
     setEditingMotif(uuid);
   };
 
+  const handleReprise = () => {
+    setRepriseLoading(true);
+    fetch('http://127.0.0.1:5000/reprise',{
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }
+    )
+      .then(response => response.json())
+      .then(data => {
+        const sortedMotifs = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setReprisedMotifs(sortedMotifs);
+        setRepriseLoading(false);
+      })
+      .catch(error => {
+        console.error('Error fetching reprised motifs:', error);
+        setRepriseLoading(false);
+      });
+  };
+
   if (isLoading) {
     return <CircularProgress />;
   }
@@ -163,6 +186,7 @@ function App() {
         <Tab label="Motifs" />
         <Tab label="Add Motif" />
         <Tab label="Add Citation" />
+        <Tab label="Reprised Motifs" />
       </Tabs>
       <TabPanel value={tabValue} index={0}>
         <TableContainer component={Paper}>
@@ -243,6 +267,40 @@ function App() {
         <Button variant="contained" color="primary" onClick={handleAddCitation}>
           Add Citation
         </Button>
+      </TabPanel>
+      <TabPanel value={tabValue} index={3}>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={handleReprise}
+          disabled={repriseLoading}
+          sx={{ mb: 2 }}
+        >
+          {repriseLoading ? <CircularProgress size={24} /> : 'Generate Reprised Motifs'}
+        </Button>
+        
+        {reprisedMotifs.length > 0 && (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Content</TableCell>
+                  <TableCell>Created At</TableCell>
+                  <TableCell>Citation</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {reprisedMotifs.map(motif => (
+                  <TableRow key={motif.uuid}>
+                    <TableCell>{motif.content}</TableCell>
+                    <TableCell>{new Date(motif.created_at).toLocaleString()}</TableCell>
+                    <TableCell>{motif.citation}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </TabPanel>
     </Container>
   );

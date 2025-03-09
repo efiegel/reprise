@@ -30,7 +30,7 @@ class Motif(Base):
 
     uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
     citation_uuid = Column(String(36), ForeignKey("citation.uuid"), nullable=True)
 
     citation = relationship("Citation", backref="motifs")
@@ -41,4 +41,15 @@ class Citation(Base):
 
     uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     title = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+
+
+class Reprisal(Base):
+    __tablename__ = "reprisal"
+
+    uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    motif_uuid = Column(String(36), ForeignKey("motif.uuid"), nullable=False)
+    set_uuid = Column(String(36), nullable=False)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+
+    motif = relationship("Motif", backref="reprisals")
