@@ -20,10 +20,13 @@ class Service:
         reprisal_min = min([len(motif.reprisals) for motif in motifs])
 
         reprised_motifs = []
-        for motif in motifs[: self.reprisal_motif_count]:
+        for motif in motifs:
             if len(motif.reprisals) < reprisal_max or reprisal_max == reprisal_min:
                 reprised_motifs.append(motif)
                 self.reprisal_repository.add_reprisal(motif.uuid, str(set_uuid))
                 self.session.refresh(motif)
+
+                if len(reprised_motifs) == self.reprisal_motif_count:
+                    break
 
         return reprised_motifs
