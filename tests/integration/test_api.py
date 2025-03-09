@@ -133,3 +133,11 @@ class TestAPI:
         with database_session() as session:
             motif = session.query(Motif).filter_by(uuid=motif.uuid).one_or_none()
             assert motif.citation.title == citation.title
+
+    def test_reprise_motifs(self, client, motif):
+        response = client.get("/reprise")
+        data = json.loads(response.data)
+
+        assert response.status_code == 200
+        assert len(data) > 0
+        assert data[0]["content"] == motif.content

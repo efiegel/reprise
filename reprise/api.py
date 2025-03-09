@@ -3,6 +3,7 @@ from flask_cors import CORS
 
 from reprise.db import database_session
 from reprise.repository import CitationRepository, MotifRepository
+from reprise.service import Service
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -110,3 +111,20 @@ def create_citation():
                     "title": citation.title,
                 }
             )
+
+
+@app.route("/reprise", methods=["GET"])
+def reprise():
+    with database_session() as session:
+        service = Service(session)
+        reprised_motifs = service.reprise_motifs()
+        motifs_list = [
+            {
+                "uuid": motif.uuid,
+                "content": motif.content,
+                "created_at": motif.created_at.isoformat(),
+                "citation": motif.citation.title if motif.citation else None,
+            }
+            for motif in reprised_motifs
+        ]
+        return jsonify(motifs_list)
