@@ -156,7 +156,13 @@ function App() {
 
   const handleReprise = () => {
     setRepriseLoading(true);
-    fetch('http://127.0.0.1:5000/reprise')
+    fetch('http://127.0.0.1:5000/reprise',{
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }
+    )
       .then(response => response.json())
       .then(data => {
         const sortedMotifs = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));

@@ -135,7 +135,7 @@ class TestAPI:
             assert motif.citation.title == citation.title
 
     def test_reprise_motifs(self, client, motif):
-        response = client.get("/reprise")
+        response = client.post("/reprise")
         data = json.loads(response.data)
 
         assert response.status_code == 200

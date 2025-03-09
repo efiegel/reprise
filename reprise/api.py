@@ -113,7 +113,7 @@ def create_citation():
             )
 
 
-@app.route("/reprise", methods=["GET"])
+@app.route("/reprise", methods=["POST"])
 def reprise():
     with database_session() as session:
         service = Service(session)
