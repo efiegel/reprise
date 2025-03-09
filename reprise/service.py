@@ -1,4 +1,4 @@
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
@@ -14,12 +14,13 @@ class Service:
         self.motif_repository = MotifRepository(session)
         self.reprisal_repository = ReprisalRepository(session)
 
-    def reprise_motifs(self, set_uuid: UUID = uuid4()) -> list[Motif]:
+    def reprise_motifs(self) -> list[Motif]:
         motifs = self.motif_repository.get_motifs()
         reprisal_max = max([len(motif.reprisals) for motif in motifs])
         reprisal_min = min([len(motif.reprisals) for motif in motifs])
 
         reprised_motifs = []
+        set_uuid = uuid4()
         for motif in motifs:
             if len(motif.reprisals) < reprisal_max or reprisal_max == reprisal_min:
                 reprised_motifs.append(motif)
