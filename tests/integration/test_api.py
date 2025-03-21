@@ -19,8 +19,8 @@ class TestAPI:
         data = json.loads(response.data)
 
         assert response.status_code == 200
-        assert len(data) == 1
-        assert data[0]["content"] == motif.content
+        assert len(data["motifs"]) == 1
+        assert data["motifs"][0]["content"] == motif.content
 
     def test_add_motif_without_citation(self, client):
         response = client.post(
