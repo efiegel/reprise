@@ -106,6 +106,7 @@ function App() {
   };
 
   const handleAddMotif = () => {
+    if (!newMotifContent.trim()) return; // Prevent empty motifs
     fetch('http://127.0.0.1:5000/motifs', {
       method: 'POST',
       headers: {
@@ -190,6 +191,12 @@ function App() {
     setPage(value);
   };
 
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      handleAddMotif();
+    }
+  };
+
   if (isLoading) {
     return <CircularProgress />;
   }
@@ -211,6 +218,7 @@ function App() {
             label="New Motif Content"
             value={newMotifContent}
             onChange={e => setNewMotifContent(e.target.value)}
+            onKeyDown={handleKeyDown} // Add keydown handler
             sx={{ mb: 2 }}
           />
           <FormControl fullWidth sx={{ mb: 2 }}>
