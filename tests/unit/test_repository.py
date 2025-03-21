@@ -48,6 +48,30 @@ class TestMotifRepository:
         motif = repository.add_citation(motif.uuid, citation)
         assert motif.citation == citation
 
+    def test_get_motifs_paginated(self, session, repository):
+        motif_factory(session=session).create_batch(15)
+        page_size = 5
+
+        # first page
+        motifs_page_1 = repository.get_motifs_paginated(page=1, page_size=page_size)
+        assert len(motifs_page_1) == page_size
+
+        # first page
+        motifs_page_2 = repository.get_motifs_paginated(page=2, page_size=page_size)
+        assert len(motifs_page_2) == page_size
+
+        # remaining motifs
+        motifs_page_3 = repository.get_motifs_paginated(page=3, page_size=page_size)
+        assert len(motifs_page_3) == 5
+
+        # empty page
+        motifs_page_4 = repository.get_motifs_paginated(page=4, page_size=page_size)
+        assert len(motifs_page_4) == 0
+
+    def test_get_motifs_count(self, session, repository):
+        motif_factory(session=session).create_batch(10)
+        assert repository.get_motifs_count() == 10
+
 
 class TestCitationRepository:
     @pytest.fixture

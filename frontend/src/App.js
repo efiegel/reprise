@@ -18,6 +18,7 @@ import {
   Select,
   InputLabel,
   FormControl,
+  Pagination,
 } from '@mui/material';
 import './App.css';
 
@@ -42,8 +43,8 @@ function TabPanel(props) {
 }
 
 function App() {
-  const [motifs, setMotifs] = useState([]);
-  const [citations, setCitations] = useState([]);
+  const [motifs, setMotifs] = useState([]); // Initialize with an empty array
+  const [citations, setCitations] = useState([]); // Initialize with an empty array
   const [isLoading, setIsLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
   const [newMotifContent, setNewMotifContent] = useState('');
@@ -52,29 +53,39 @@ function App() {
   const [editingMotif, setEditingMotif] = useState(null);
   const [reprisedMotifs, setReprisedMotifs] = useState([]);
   const [repriseLoading, setRepriseLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [totalMotifs, setTotalMotifs] = useState(0);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/motifs')
+    fetchMotifs();
+    fetch('http://127.0.0.1:5000/citations')
       .then(response => response.json())
       .then(data => {
-        const sortedMotifs = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        setMotifs(sortedMotifs);
+        setCitations(data || []); // Ensure data is an array
+      })
+      .catch(error => {
+        console.error('Error fetching citations:', error);
+        setCitations([]); // Fallback to an empty array
+      });
+  }, [page]);
+
+  const fetchMotifs = () => {
+    setIsLoading(true);
+    fetch(`http://127.0.0.1:5000/motifs?page=${page}&page_size=${pageSize}`)
+      .then(response => response.json())
+      .then(data => {
+        setMotifs(data.motifs || []); // Ensure data.motifs is an array
+        setTotalMotifs(data.total_count || 0); // Ensure total_count is a number
         setIsLoading(false);
       })
       .catch(error => {
         console.error('Error fetching motifs:', error);
+        setMotifs([]); // Fallback to an empty array
+        setTotalMotifs(0); // Fallback to 0
         setIsLoading(false);
       });
-
-    fetch('http://127.0.0.1:5000/citations')
-      .then(response => response.json())
-      .then(data => {
-        setCitations(data);
-      })
-      .catch(error => {
-        console.error('Error fetching citations:', error);
-      });
-  }, []);
+  };
 
   const handleSave = (uuid, content) => {
     fetch(`http://127.0.0.1:5000/motifs/${uuid}`, {
@@ -175,6 +186,10 @@ function App() {
       });
   };
 
+  const handlePageChange = (event, value) => {
+    setPage(value);
+  };
+
   if (isLoading) {
     return <CircularProgress />;
   }
@@ -220,42 +235,54 @@ function App() {
             Add Motif
           </Button>
         </Box>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Content</TableCell>
-                <TableCell>Created At</TableCell>
-                <TableCell>Citation</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {motifs.map(motif => (
-                <TableRow key={motif.uuid}>
-                  <TableCell>
-                    <TextField
-                      fullWidth
-                      multiline
-                      minRows={3}
-                      value={motif.content}
-                      onChange={e => handleMotifChange(motif.uuid, e.target.value)}
-                      onBlur={() => handleSave(motif.uuid, motif.content)}
-                      className={editingMotif === motif.uuid ? 'editing' : ''}
-                    />
-                  </TableCell>
-                  <TableCell>{new Date(motif.created_at).toLocaleString()}</TableCell>
-                  <TableCell>{motif.citation}</TableCell>
-                  <TableCell>
-                    <Button variant="contained" color="secondary" onClick={() => handleDelete(motif.uuid)}>
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        {isLoading ? (
+          <CircularProgress />
+        ) : (
+          <>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Content</TableCell>
+                    <TableCell>Created At</TableCell>
+                    <TableCell>Citation</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {motifs.map(motif => (
+                    <TableRow key={motif.uuid}>
+                      <TableCell>
+                        <TextField
+                          fullWidth
+                          multiline
+                          minRows={3}
+                          value={motif.content}
+                          onChange={e => handleMotifChange(motif.uuid, e.target.value)}
+                          onBlur={() => handleSave(motif.uuid, motif.content)}
+                          className={editingMotif === motif.uuid ? 'editing' : ''}
+                        />
+                      </TableCell>
+                      <TableCell>{new Date(motif.created_at).toLocaleString()}</TableCell>
+                      <TableCell>{motif.citation}</TableCell>
+                      <TableCell>
+                        <Button variant="contained" color="secondary" onClick={() => handleDelete(motif.uuid)}>
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <Pagination
+              count={Math.ceil(totalMotifs / pageSize)}
+              page={page}
+              onChange={handlePageChange}
+              sx={{ mt: 2 }}
+            />
+          </>
+        )}
       </TabPanel>
       <TabPanel value={tabValue} index={1}>
         <Box mb={3}>

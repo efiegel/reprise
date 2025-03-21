@@ -141,3 +141,31 @@ class TestAPI:
         assert response.status_code == 200
         assert len(data) > 0
         assert data[0]["content"] == motif.content
+
+    def test_get_motifs_paginated(self, client, session):
+        motif_factory(session=session).create_batch(12)
+
+        # first page
+        response = client.get("/motifs?page=1&page_size=5")
+        data = json.loads(response.data)
+        assert response.status_code == 200
+        assert len(data["motifs"]) == 5
+        assert data["total_count"] == 12
+
+        # second page
+        response = client.get("/motifs?page=2&page_size=5")
+        data = json.loads(response.data)
+        assert response.status_code == 200
+        assert len(data["motifs"]) == 5
+
+        # third page
+        response = client.get("/motifs?page=3&page_size=5")
+        data = json.loads(response.data)
+        assert response.status_code == 200
+        assert len(data["motifs"]) == 2
+
+        # empty page
+        response = client.get("/motifs?page=4&page_size=5")
+        data = json.loads(response.data)
+        assert response.status_code == 200
+        assert len(data["motifs"]) == 0
