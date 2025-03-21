@@ -184,11 +184,42 @@ function App() {
       <h1>Reprise</h1>
       <Tabs value={tabValue} onChange={handleTabChange} aria-label="simple tabs example">
         <Tab label="Motifs" />
-        <Tab label="Add Motif" />
         <Tab label="Add Citation" />
         <Tab label="Reprised Motifs" />
       </Tabs>
       <TabPanel value={tabValue} index={0}>
+        <Box mb={3}>
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
+            label="New Motif Content"
+            value={newMotifContent}
+            onChange={e => setNewMotifContent(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="citation-select-label">Citation</InputLabel>
+            <Select
+              labelId="citation-select-label"
+              value={selectedCitation}
+              onChange={e => setSelectedCitation(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {citations.map(citation => (
+                <MenuItem key={citation.uuid} value={citation.title}>
+                  {citation.title}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Button variant="contained" color="primary" onClick={handleAddMotif}>
+            Add Motif
+          </Button>
+        </Box>
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -229,37 +260,6 @@ function App() {
       <TabPanel value={tabValue} index={1}>
         <TextField
           fullWidth
-          multiline
-          minRows={3}
-          label="New Motif Content"
-          value={newMotifContent}
-          onChange={e => setNewMotifContent(e.target.value)}
-        />
-        <FormControl fullWidth>
-          <InputLabel id="citation-select-label">Citation</InputLabel>
-          <Select
-            labelId="citation-select-label"
-            value={selectedCitation}
-            onChange={e => setSelectedCitation(e.target.value)}
-            displayEmpty
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            {citations.map(citation => (
-              <MenuItem key={citation.uuid} value={citation.title}>
-                {citation.title}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <Button variant="contained" color="primary" onClick={handleAddMotif}>
-          Add Motif
-        </Button>
-      </TabPanel>
-      <TabPanel value={tabValue} index={2}>
-        <TextField
-          fullWidth
           label="New Citation Title"
           value={newCitationTitle}
           onChange={e => setNewCitationTitle(e.target.value)}
@@ -268,7 +268,7 @@ function App() {
           Add Citation
         </Button>
       </TabPanel>
-      <TabPanel value={tabValue} index={3}>
+      <TabPanel value={tabValue} index={2}>
         <Button 
           variant="contained" 
           color="primary" 
