@@ -184,7 +184,7 @@ function App() {
       <h1>Reprise</h1>
       <Tabs value={tabValue} onChange={handleTabChange} aria-label="simple tabs example">
         <Tab label="Motifs" />
-        <Tab label="Add Citation" />
+        <Tab label="Citations" />
         <Tab label="Reprised Motifs" />
       </Tabs>
       <TabPanel value={tabValue} index={0}>
@@ -258,15 +258,36 @@ function App() {
         </TableContainer>
       </TabPanel>
       <TabPanel value={tabValue} index={1}>
-        <TextField
-          fullWidth
-          label="New Citation Title"
-          value={newCitationTitle}
-          onChange={e => setNewCitationTitle(e.target.value)}
-        />
-        <Button variant="contained" color="primary" onClick={handleAddCitation}>
-          Add Citation
-        </Button>
+        <Box mb={3}>
+          <TextField
+            fullWidth
+            label="New Citation Title"
+            value={newCitationTitle}
+            onChange={e => setNewCitationTitle(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <Button variant="contained" color="primary" onClick={handleAddCitation}>
+            Add Citation
+          </Button>
+        </Box>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Title</TableCell>
+                <TableCell>Created At</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {citations.map(citation => (
+                <TableRow key={citation.uuid}>
+                  <TableCell>{citation.title}</TableCell>
+                  <TableCell>{new Date(citation.created_at).toLocaleString()}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </TabPanel>
       <TabPanel value={tabValue} index={2}>
         <Button 
