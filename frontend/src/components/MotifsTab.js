@@ -16,6 +16,8 @@ import {
   InputLabel,
   FormControl,
   Pagination,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 
 export default function MotifsTab() {
@@ -28,6 +30,7 @@ export default function MotifsTab() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [totalMotifs, setTotalMotifs] = useState(0);
+  const [deleteEnabled, setDeleteEnabled] = useState(false); // State to control delete button visibility
 
   useEffect(() => {
     fetchMotifs();
@@ -161,7 +164,7 @@ export default function MotifsTab() {
                   <TableCell>Content</TableCell>
                   <TableCell>Created At</TableCell>
                   <TableCell>Citation</TableCell>
-                  <TableCell>Actions</TableCell>
+                  {deleteEnabled && <TableCell>Actions</TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -179,11 +182,13 @@ export default function MotifsTab() {
                     </TableCell>
                     <TableCell>{new Date(motif.created_at).toLocaleString()}</TableCell>
                     <TableCell>{motif.citation}</TableCell>
-                    <TableCell>
-                      <Button variant="contained" color="secondary" onClick={() => handleDelete(motif.uuid)}>
-                        Delete
-                      </Button>
-                    </TableCell>
+                    {deleteEnabled && (
+                      <TableCell>
+                        <Button variant="contained" color="secondary" onClick={() => handleDelete(motif.uuid)}>
+                          Delete
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -197,6 +202,18 @@ export default function MotifsTab() {
           />
         </>
       )}
+      <Box mt={3}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={deleteEnabled}
+              onChange={(e) => setDeleteEnabled(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Show delete buttons"
+        />
+      </Box>
     </Box>
   );
 }
