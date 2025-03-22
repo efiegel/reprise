@@ -1,15 +1,15 @@
-import React from 'react';
-import { Container } from '@mui/material';
-import TabsContainer from './components/TabsContainer';
-import MotifsTab from './components/MotifsTab';
-import CitationsTab from './components/CitationsTab';
-import ReprisalsTab from './components/ReprisalsTab';
+import React from "react";
+import { Container } from "@mui/material";
+import TabsContainer from "./components/TabsContainer";
+import MotifsTab from "./components/MotifsTab";
+import CitationsTab from "./components/CitationsTab";
+import ReprisalsTab from "./components/ReprisalsTab";
 
 function App() {
   const tabs = [
-    { label: 'Reprisals', content: <ReprisalsTab /> }, // Updated tab name
-    { label: 'Motifs', content: <MotifsTab /> },
-    { label: 'Citations', content: <CitationsTab /> },
+    { label: "Reprisals", content: <ReprisalsTab /> },
+    { label: "Motifs", content: <MotifsTab /> },
+    { label: "Citations", content: <CitationsTab /> },
   ];
 
   return (

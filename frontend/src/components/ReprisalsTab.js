@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Table,
@@ -10,7 +10,7 @@ import {
   Paper,
   Button,
   CircularProgress,
-} from '@mui/material';
+} from "@mui/material";
 
 export default function ReprisalsTab() {
   const [reprisals, setReprisals] = useState([]);
@@ -18,19 +18,19 @@ export default function ReprisalsTab() {
 
   const fetchReprisals = () => {
     setRepriseLoading(true);
-    fetch('http://127.0.0.1:5000/reprise', {
-      method: 'POST',
+    fetch("http://127.0.0.1:5000/reprise", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     })
-      .then(response => response.json())
-      .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         setReprisals(data);
         setRepriseLoading(false);
       })
-      .catch(error => {
-        console.error('Error fetching reprisals:', error);
+      .catch((error) => {
+        console.error("Error fetching reprisals:", error);
         setRepriseLoading(false);
       });
   };
@@ -43,10 +43,12 @@ export default function ReprisalsTab() {
   return (
     <Box>
       {reprisals.length > 0 && (
-        <TableContainer component={Paper} sx={{ mt: 2 }}> {/* Add margin-top to the table */}
+        <TableContainer component={Paper} sx={{ mt: 2 }}>
+          {" "}
+          {/* Add margin-top to the table */}
           <Table>
             <TableBody>
-              {reprisals.map(reprisal => (
+              {reprisals.map((reprisal) => (
                 <TableRow key={reprisal.uuid}>
                   <TableCell>{reprisal.content}</TableCell>
                   <TableCell>{reprisal.citation}</TableCell>
@@ -56,14 +58,14 @@ export default function ReprisalsTab() {
           </Table>
         </TableContainer>
       )}
-    <Button
+      <Button
         variant="contained"
         color="primary"
         onClick={fetchReprisals}
         disabled={repriseLoading}
         sx={{ mt: 3 }}
       >
-        {repriseLoading ? <CircularProgress size={24} /> : 'Generate'}
+        {repriseLoading ? <CircularProgress size={24} /> : "Generate"}
       </Button>
     </Box>
   );

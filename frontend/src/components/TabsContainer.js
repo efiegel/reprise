@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Tabs, Tab, Box } from '@mui/material';
+import React, { useState } from "react";
+import { Tabs, Tab, Box } from "@mui/material";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;

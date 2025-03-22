@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Table,
@@ -10,39 +10,39 @@ import {
   Paper,
   TextField,
   Button,
-} from '@mui/material';
+} from "@mui/material";
 
 export default function CitationsTab() {
   const [citations, setCitations] = useState([]);
-  const [newCitationTitle, setNewCitationTitle] = useState('');
+  const [newCitationTitle, setNewCitationTitle] = useState("");
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/citations')
-      .then(response => response.json())
-      .then(data => {
+    fetch("http://127.0.0.1:5000/citations")
+      .then((response) => response.json())
+      .then((data) => {
         setCitations(data || []);
       })
-      .catch(error => {
-        console.error('Error fetching citations:', error);
+      .catch((error) => {
+        console.error("Error fetching citations:", error);
         setCitations([]);
       });
   }, []);
 
   const handleAddCitation = () => {
-    fetch('http://127.0.0.1:5000/citations', {
-      method: 'POST',
+    fetch("http://127.0.0.1:5000/citations", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ title: newCitationTitle }),
     })
-      .then(response => response.json())
-      .then(data => {
-        setNewCitationTitle('');
+      .then((response) => response.json())
+      .then((data) => {
+        setNewCitationTitle("");
         setCitations([...citations, data]);
       })
-      .catch(error => {
-        console.error('Error adding citation:', error);
+      .catch((error) => {
+        console.error("Error adding citation:", error);
       });
   };
 
@@ -53,7 +53,7 @@ export default function CitationsTab() {
           fullWidth
           label="New Citation Title"
           value={newCitationTitle}
-          onChange={e => setNewCitationTitle(e.target.value)}
+          onChange={(e) => setNewCitationTitle(e.target.value)}
           sx={{ mb: 2 }}
         />
         <Button variant="contained" color="primary" onClick={handleAddCitation}>
@@ -69,10 +69,12 @@ export default function CitationsTab() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {citations.map(citation => (
+            {citations.map((citation) => (
               <TableRow key={citation.uuid}>
                 <TableCell>{citation.title}</TableCell>
-                <TableCell>{new Date(citation.created_at).toLocaleString()}</TableCell>
+                <TableCell>
+                  {new Date(citation.created_at).toLocaleString()}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
