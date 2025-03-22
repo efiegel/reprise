@@ -26,13 +26,29 @@ export default function MotifsTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [newMotifContent, setNewMotifContent] = useState('');
   const [selectedCitation, setSelectedCitation] = useState('');
-  const [editingMotif, setEditingMotif] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [totalMotifs, setTotalMotifs] = useState(0);
   const [deleteEnabled, setDeleteEnabled] = useState(false); // State to control delete button visibility
 
   useEffect(() => {
+    const fetchMotifs = () => {
+      setIsLoading(true);
+      fetch(`http://127.0.0.1:5000/motifs?page=${page}&page_size=${pageSize}`)
+        .then(response => response.json())
+        .then(data => {
+          setMotifs(data.motifs || []);
+          setTotalMotifs(data.total_count || 0);
+          setIsLoading(false);
+        })
+        .catch(error => {
+          console.error('Error fetching motifs:', error);
+          setMotifs([]);
+          setTotalMotifs(0);
+          setIsLoading(false);
+        });
+    };
+
     fetchMotifs();
     fetch('http://127.0.0.1:5000/citations')
       .then(response => response.json())
@@ -43,24 +59,7 @@ export default function MotifsTab() {
         console.error('Error fetching citations:', error);
         setCitations([]);
       });
-  }, [page]);
-
-  const fetchMotifs = () => {
-    setIsLoading(true);
-    fetch(`http://127.0.0.1:5000/motifs?page=${page}&page_size=${pageSize}`)
-      .then(response => response.json())
-      .then(data => {
-        setMotifs(data.motifs || []);
-        setTotalMotifs(data.total_count || 0);
-        setIsLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching motifs:', error);
-        setMotifs([]);
-        setTotalMotifs(0);
-        setIsLoading(false);
-      });
-  };
+  }, [page, pageSize]);
 
   const handleAddMotif = () => {
     if (!newMotifContent.trim()) return;
@@ -91,9 +90,6 @@ export default function MotifsTab() {
       body: JSON.stringify({ content }),
     })
       .then(response => response.json())
-      .then(() => {
-        setEditingMotif(null);
-      })
       .catch(error => {
         console.error('Error updating motif:', error);
       });
@@ -119,6 +115,10 @@ export default function MotifsTab() {
     if (event.key === 'Enter') {
       handleAddMotif();
     }
+  };
+
+  const handleMotifContentChange = (uuid, newContent) => {
+    setMotifs(motifs.map(motif => (motif.uuid === uuid ? { ...motif, content: newContent } : motif)));
   };
 
   return (
@@ -176,7 +176,7 @@ export default function MotifsTab() {
                         multiline
                         minRows={3}
                         value={motif.content}
-                        onChange={e => setEditingMotif(motif.uuid)}
+                        onChange={e => handleMotifContentChange(motif.uuid, e.target.value)}
                         onBlur={() => handleSave(motif.uuid, motif.content)}
                       />
                     </TableCell>
