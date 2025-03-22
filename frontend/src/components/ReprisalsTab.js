@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 
 export default function ReprisalsTab() {
-  const [reprisals, setReprisals] = useState([]); // Updated variable name
+  const [reprisals, setReprisals] = useState([]);
   const [repriseLoading, setRepriseLoading] = useState(false);
 
   const fetchReprisals = () => {
@@ -26,11 +26,11 @@ export default function ReprisalsTab() {
     })
       .then(response => response.json())
       .then(data => {
-        setReprisals(data); // Updated variable name
+        setReprisals(data);
         setRepriseLoading(false);
       })
       .catch(error => {
-        console.error('Error fetching reprisals:', error); // Updated label
+        console.error('Error fetching reprisals:', error);
         setRepriseLoading(false);
       });
   };
@@ -43,7 +43,7 @@ export default function ReprisalsTab() {
   return (
     <Box>
       {reprisals.length > 0 && (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ mt: 2 }}> {/* Add margin-top to the table */}
           <Table>
             <TableHead>
               <TableRow>
@@ -64,14 +64,14 @@ export default function ReprisalsTab() {
           </Table>
         </TableContainer>
       )}
-      <Button
+    <Button
         variant="contained"
         color="primary"
         onClick={fetchReprisals}
         disabled={repriseLoading}
-        sx={{ mb: 2 }}
+        sx={{ mt: 3 }}
       >
-        {repriseLoading ? <CircularProgress size={24} /> : 'Generate New Reprisals'} {/* Updated label */}
+        {repriseLoading ? <CircularProgress size={24} /> : 'Generate New Reprisals'}
       </Button>
     </Box>
   );
