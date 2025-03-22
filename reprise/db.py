@@ -66,3 +66,13 @@ class ClozeDeletion(Base):
     created_at = Column(DateTime, default=datetime.now, nullable=False)
 
     motif = relationship("Motif", back_populates="cloze_deletions")
+
+    def mask(self, mask_character: str = "*") -> str:
+        motif_content = self.motif.content
+        for start, end in self.mask_tuples:
+            motif_content = (
+                motif_content[:start]
+                + mask_character * (end - start + 1)
+                + motif_content[end + 1 :]
+            )
+        return motif_content
