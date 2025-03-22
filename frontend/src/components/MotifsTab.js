@@ -161,10 +161,10 @@ export default function MotifsTab() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Content</TableCell>
-                  <TableCell>Created At</TableCell>
-                  <TableCell>Citation</TableCell>
-                  {deleteEnabled && <TableCell>Actions</TableCell>}
+                  <TableCell sx={{ width: '50%' }}>Content</TableCell>
+                  <TableCell sx={{ width: '20%' }}>Created At</TableCell>
+                  <TableCell sx={{ width: '20%' }}>Citation</TableCell>
+                  {deleteEnabled && <TableCell sx={{ width: '10%' }}>Actions</TableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
