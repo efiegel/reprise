@@ -77,3 +77,6 @@ class ClozeDeletion(Base):
             motif_content = motif_content[:start] + mask + motif_content[end + 1 :]
             n_removed_characters += end - start + 1 - len(mask)
         return motif_content
+
+    def masked_words(self) -> list[str]:
+        return [self.motif.content[start : end + 1] for start, end in self.mask_tuples]

@@ -145,3 +145,12 @@ class TestClozeDeletionRepository:
         cd2 = repository.add_cloze_deletion(motif.uuid, [(4, 6), (11, 14)])
         assert cd1.masked_motif() == "the sky is *"
         assert cd2.masked_motif("___") == "the ___ is ___"
+
+    def test_masked_words(self, repository, session):
+        motif_content = "the sky is blue"
+        motif = motif_factory(session=session).create(content=motif_content)
+
+        cd1 = repository.add_cloze_deletion(motif.uuid, [(11, 14)])
+        cd2 = repository.add_cloze_deletion(motif.uuid, [(4, 6), (11, 14)])
+        assert cd1.masked_words() == ["blue"]
+        assert cd2.masked_words() == ["sky", "blue"]
