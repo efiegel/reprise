@@ -71,7 +71,7 @@ export default function ReprisalsTab() {
         disabled={repriseLoading}
         sx={{ mt: 3 }}
       >
-        {repriseLoading ? <CircularProgress size={24} /> : 'Generate New Reprisals'}
+        {repriseLoading ? <CircularProgress size={24} /> : 'Generate'}
       </Button>
     </Box>
   );
