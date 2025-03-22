@@ -7,9 +7,9 @@ import ReprisedMotifsTab from './components/ReprisedMotifsTab';
 
 function App() {
   const tabs = [
+    { label: 'Reprised Motifs', content: <ReprisedMotifsTab /> }, // Default landing tab
     { label: 'Motifs', content: <MotifsTab /> },
     { label: 'Citations', content: <CitationsTab /> },
-    { label: 'Reprised Motifs', content: <ReprisedMotifsTab /> },
   ];
 
   return (

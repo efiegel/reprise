@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Table,
@@ -16,7 +16,7 @@ export default function ReprisedMotifsTab() {
   const [reprisedMotifs, setReprisedMotifs] = useState([]);
   const [repriseLoading, setRepriseLoading] = useState(false);
 
-  const handleReprise = () => {
+  const fetchReprisedMotifs = () => {
     setRepriseLoading(true);
     fetch('http://127.0.0.1:5000/reprise', {
       method: 'POST',
@@ -35,17 +35,13 @@ export default function ReprisedMotifsTab() {
       });
   };
 
+  useEffect(() => {
+    // Automatically fetch a new set of reprised motifs on mount
+    fetchReprisedMotifs();
+  }, []);
+
   return (
     <Box>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleReprise}
-        disabled={repriseLoading}
-        sx={{ mb: 2 }}
-      >
-        {repriseLoading ? <CircularProgress size={24} /> : 'Generate Reprised Motifs'}
-      </Button>
       {reprisedMotifs.length > 0 && (
         <TableContainer component={Paper}>
           <Table>
@@ -68,6 +64,15 @@ export default function ReprisedMotifsTab() {
           </Table>
         </TableContainer>
       )}
+        <Button
+        variant="contained"
+        color="primary"
+        onClick={fetchReprisedMotifs}
+        disabled={repriseLoading}
+        sx={{ mb: 2 }}
+      >
+        {repriseLoading ? <CircularProgress size={24} /> : 'Generate New Reprised Motifs'}
+      </Button>
     </Box>
   );
 }
