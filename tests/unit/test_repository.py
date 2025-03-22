@@ -143,5 +143,5 @@ class TestClozeDeletionRepository:
 
         cd1 = repository.add_cloze_deletion(motif.uuid, [(11, 14)])
         cd2 = repository.add_cloze_deletion(motif.uuid, [(4, 6), (11, 14)])
-        assert cd1.mask() == "the sky is *"
-        assert cd2.mask("___") == "the ___ is ___"
+        assert cd1.masked_motif() == "the sky is *"
+        assert cd2.masked_motif("___") == "the ___ is ___"

@@ -67,7 +67,7 @@ class ClozeDeletion(Base):
 
     motif = relationship("Motif", back_populates="cloze_deletions")
 
-    def mask(self, mask: str = "*") -> str:
+    def masked_motif(self, mask: str = "*") -> str:
         motif_content = self.motif.content
         n_removed_characters = 0
         for start, end in self.mask_tuples:
