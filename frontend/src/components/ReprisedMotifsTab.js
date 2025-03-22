@@ -52,16 +52,16 @@ export default function ReprisedMotifsTab() {
             <TableHead>
               <TableRow>
                 <TableCell>Content</TableCell>
-                <TableCell>Created At</TableCell>
                 <TableCell>Citation</TableCell>
+                <TableCell>Created At</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {reprisedMotifs.map(motif => (
                 <TableRow key={motif.uuid}>
                   <TableCell>{motif.content}</TableCell>
-                  <TableCell>{new Date(motif.created_at).toLocaleString()}</TableCell>
                   <TableCell>{motif.citation}</TableCell>
+                  <TableCell>{new Date(motif.created_at).toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
