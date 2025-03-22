@@ -162,8 +162,8 @@ export default function MotifsTab() {
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ width: '50%' }}>Content</TableCell>
-                  <TableCell sx={{ width: '20%' }}>Created At</TableCell>
                   <TableCell sx={{ width: '20%' }}>Citation</TableCell>
+                  <TableCell sx={{ width: '20%' }}>Created At</TableCell>
                   {deleteEnabled && <TableCell sx={{ width: '10%' }}>Actions</TableCell>}
                 </TableRow>
               </TableHead>
@@ -180,8 +180,8 @@ export default function MotifsTab() {
                         onBlur={() => handleSave(motif.uuid, motif.content)}
                       />
                     </TableCell>
-                    <TableCell>{new Date(motif.created_at).toLocaleString()}</TableCell>
                     <TableCell>{motif.citation}</TableCell>
+                    <TableCell>{new Date(motif.created_at).toLocaleString()}</TableCell>
                     {deleteEnabled && (
                       <TableCell>
                         <Button variant="contained" color="secondary" onClick={() => handleDelete(motif.uuid)}>
