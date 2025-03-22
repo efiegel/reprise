@@ -1,4 +1,4 @@
-from reprise.db import Citation, Motif, Reprisal
+from reprise.db import Citation, ClozeDeletion, Motif, Reprisal
 
 
 class MotifRepository:
@@ -77,3 +77,14 @@ class ReprisalRepository:
         self.session.add(reprisal)
         self.session.flush()
         return reprisal
+
+
+class ClozeDeletionRepository:
+    def __init__(self, session):
+        self.session = session
+
+    def add_cloze_deletion(self, motif_uuid: str, mask_tuples: list) -> ClozeDeletion:
+        cloze_deletion = ClozeDeletion(motif_uuid=motif_uuid, mask_tuples=mask_tuples)
+        self.session.add(cloze_deletion)
+        self.session.flush()
+        return cloze_deletion
