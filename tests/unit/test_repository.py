@@ -2,7 +2,12 @@ from uuid import uuid4
 
 import pytest
 
-from reprise.repository import CitationRepository, MotifRepository, ReprisalRepository
+from reprise.repository import (
+    CitationRepository,
+    ClozeDeletionRepository,
+    MotifRepository,
+    ReprisalRepository,
+)
 from tests.factories import citation_factory, motif_factory
 
 
@@ -114,3 +119,20 @@ class TestReprisalRepository:
         assert reprisal.created_at is not None
         assert reprisal.set_uuid == set_uuid
         assert reprisal.motif == motif
+
+
+class TestClozeDeletionRepository:
+    @pytest.fixture
+    def repository(self, session):
+        return ClozeDeletionRepository(session)
+
+    def test_add_cloze_deletion(self, repository, session):
+        motif_content = "the sky is blue"
+        motif = motif_factory(session=session).create(content=motif_content)
+
+        cloze_deletion = repository.add_cloze_deletion(motif.uuid, [(11, 14)])
+        assert cloze_deletion.uuid is not None
+        assert cloze_deletion.created_at is not None
+        assert cloze_deletion.mask_tuples == [(11, 14)]
+        assert cloze_deletion.motif == motif
+        assert motif.cloze_deletions == [cloze_deletion]

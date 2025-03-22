@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import Column, DateTime, String, Text, create_engine
+from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy.schema import ForeignKey
 
@@ -34,6 +35,7 @@ class Motif(Base):
     citation_uuid = Column(String(36), ForeignKey("citation.uuid"), nullable=True)
 
     citation = relationship("Citation", backref="motifs")
+    cloze_deletions = relationship("ClozeDeletion", back_populates="motif")
 
 
 class Citation(Base):
@@ -53,3 +55,14 @@ class Reprisal(Base):
     created_at = Column(DateTime, default=datetime.now, nullable=False)
 
     motif = relationship("Motif", backref="reprisals")
+
+
+class ClozeDeletion(Base):
+    __tablename__ = "cloze_deletion"
+
+    uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    motif_uuid = Column(String(36), ForeignKey("motif.uuid"), nullable=False)
+    mask_tuples = Column(JSON, nullable=False)  # stores a list of (start, end) tuples
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+
+    motif = relationship("Motif", back_populates="cloze_deletions")
