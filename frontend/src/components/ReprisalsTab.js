@@ -45,19 +45,11 @@ export default function ReprisalsTab() {
       {reprisals.length > 0 && (
         <TableContainer component={Paper} sx={{ mt: 2 }}> {/* Add margin-top to the table */}
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Content</TableCell>
-                <TableCell>Citation</TableCell>
-                <TableCell>Created At</TableCell>
-              </TableRow>
-            </TableHead>
             <TableBody>
               {reprisals.map(reprisal => (
                 <TableRow key={reprisal.uuid}>
                   <TableCell>{reprisal.content}</TableCell>
                   <TableCell>{reprisal.citation}</TableCell>
-                  <TableCell>{new Date(reprisal.created_at).toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
