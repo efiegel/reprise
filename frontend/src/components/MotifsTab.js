@@ -132,7 +132,7 @@ export default function MotifsTab() {
           sx={{ mb: 2 }}
         />
         <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel id="citation-select-label">Citation</InputLabel>
+          <InputLabel id="citation-select-label" shrink={true}>Citation</InputLabel>
           <Select
             labelId="citation-select-label"
             value={selectedCitation}
