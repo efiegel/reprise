@@ -3,11 +3,11 @@ import { Container } from '@mui/material';
 import TabsContainer from './components/TabsContainer';
 import MotifsTab from './components/MotifsTab';
 import CitationsTab from './components/CitationsTab';
-import ReprisedMotifsTab from './components/ReprisedMotifsTab';
+import ReprisalsTab from './components/ReprisalsTab';
 
 function App() {
   const tabs = [
-    { label: 'Reprised Motifs', content: <ReprisedMotifsTab /> }, // Default landing tab
+    { label: 'Reprisals', content: <ReprisalsTab /> }, // Updated tab name
     { label: 'Motifs', content: <MotifsTab /> },
     { label: 'Citations', content: <CitationsTab /> },
   ];
