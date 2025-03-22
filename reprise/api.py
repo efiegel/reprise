@@ -12,9 +12,13 @@ CORS(app)  # Enable CORS for all routes
 @app.route("/motifs", methods=["GET", "POST"])
 def motifs():
     if request.method == "GET":
+        page = int(request.args.get("page", 1))
+        page_size = int(request.args.get("page_size", 10))
         with database_session() as session:
             repository = MotifRepository(session)
-            motifs = repository.get_motifs()
+            motifs = repository.get_motifs_paginated(page, page_size)
+            total_count = repository.get_motifs_count()
+
             motifs_list = [
                 {
                     "uuid": motif.uuid,
@@ -24,7 +28,7 @@ def motifs():
                 }
                 for motif in motifs
             ]
-            return jsonify(motifs_list)
+            return jsonify({"motifs": motifs_list, "total_count": total_count})
 
     if request.method == "POST":
         data = request.get_json()

@@ -17,6 +17,19 @@ class MotifRepository:
     def get_motifs(self) -> list[Motif]:
         return self.session.query(Motif).all()
 
+    def get_motifs_paginated(self, page: int, page_size: int) -> list[Motif]:
+        offset = (page - 1) * page_size
+        return (
+            self.session.query(Motif)
+            .order_by(Motif.created_at.desc())
+            .offset(offset)
+            .limit(page_size)
+            .all()
+        )
+
+    def get_motifs_count(self) -> int:
+        return self.session.query(Motif).count()
+
     def update_motif_content(self, uuid: str, content: dict) -> Motif:
         motif = self.get_motif(uuid)
         motif.content = content
