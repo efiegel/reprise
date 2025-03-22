@@ -44,8 +44,6 @@ export default function ReprisalsTab() {
     <Box>
       {reprisals.length > 0 && (
         <TableContainer component={Paper} sx={{ mt: 2 }}>
-          {" "}
-          {/* Add margin-top to the table */}
           <Table>
             <TableBody>
               {reprisals.map((reprisal) => (

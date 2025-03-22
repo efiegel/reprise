@@ -29,7 +29,7 @@ export default function MotifsTab() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [totalMotifs, setTotalMotifs] = useState(0);
-  const [deleteEnabled, setDeleteEnabled] = useState(false); // State to control delete button visibility
+  const [deleteEnabled, setDeleteEnabled] = useState(false);
 
   useEffect(() => {
     const fetchMotifs = () => {
@@ -123,8 +123,8 @@ export default function MotifsTab() {
   const handleMotifContentChange = (uuid, newContent) => {
     setMotifs(
       motifs.map((motif) =>
-        motif.uuid === uuid ? { ...motif, content: newContent } : motif,
-      ),
+        motif.uuid === uuid ? { ...motif, content: newContent } : motif
+      )
     );
   };
 
