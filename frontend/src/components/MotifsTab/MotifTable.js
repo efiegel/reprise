@@ -10,7 +10,7 @@ import {
   Button,
   Box,
 } from "@mui/material";
-import { apiService } from "../../services/apiService";
+import { motifService } from "../../services/motifService";
 
 export default function MotifTable({
   motifs,
@@ -49,13 +49,13 @@ export default function MotifTable({
 
   const handleContentEditableBlur = (e, motifId) => {
     const newContent = e.target.innerText;
-    apiService.updateMotif(motifId, newContent).catch((error) => {
+    motifService.updateMotif(motifId, newContent).catch((error) => {
       console.error("Error updating motif:", error);
     });
   };
 
   const handleDelete = (uuid) => {
-    apiService
+    motifService
       .deleteMotif(uuid)
       .then(() => {
         onMotifDelete(uuid);

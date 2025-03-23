@@ -7,7 +7,7 @@ import {
   Switch,
 } from "@mui/material";
 import { useMotifData } from "../hooks/useMotifData";
-import { apiService } from "../services/apiService";
+import { motifService } from "../services/motifService";
 import MotifForm from "./MotifsTab/MotifForm";
 import MotifTable from "./MotifsTab/MotifTable";
 import ClozeDeletionModal from "./MotifsTab/ClozeDeletionModal";
@@ -83,7 +83,7 @@ export default function MotifsTab() {
         }
       });
 
-    apiService
+    motifService
       .saveClozeDeletion(
         modalMotif.uuid,
         mask_tuples,
@@ -119,7 +119,7 @@ export default function MotifsTab() {
   const handleDeleteClozeDeletion = () => {
     if (!modalMotif.clozeDeletionUuid) return;
 
-    apiService
+    motifService
       .deleteClozeDeletion(modalMotif.clozeDeletionUuid)
       .then(() => {
         setMotifs((prevMotifs) =>

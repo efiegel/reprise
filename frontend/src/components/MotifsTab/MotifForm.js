@@ -8,7 +8,7 @@ import {
   InputLabel,
   FormControl,
 } from "@mui/material";
-import { apiService } from "../../services/apiService";
+import { motifService } from "../../services/motifService";
 
 export default function MotifForm({ citations, onMotifAdded }) {
   const [newMotifContent, setNewMotifContent] = useState("");
@@ -17,7 +17,7 @@ export default function MotifForm({ citations, onMotifAdded }) {
   const handleAddMotif = () => {
     if (!newMotifContent.trim()) return;
 
-    apiService
+    motifService
       .createMotif(newMotifContent, selectedCitation)
       .then((data) => {
         onMotifAdded(data);

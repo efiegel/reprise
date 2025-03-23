@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { apiService } from "../services/apiService";
+import { motifService } from "../services/motifService";
 
 export function useMotifData(page, pageSize) {
   const [motifs, setMotifs] = useState([]);
@@ -15,8 +15,8 @@ export function useMotifData(page, pageSize) {
     setIsLoading(true);
 
     Promise.all([
-      apiService.getMotifs(page, pageSize),
-      apiService.getCitations(),
+      motifService.getMotifs(page, pageSize),
+      motifService.getCitations(),
     ])
       .then(([motifsData, citationsData]) => {
         setMotifs(motifsData.motifs || []);
