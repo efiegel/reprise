@@ -141,6 +141,19 @@ export default function MotifsTab() {
     );
   };
 
+  const handleOpenModal = (motif, clozeDeletionSet) => {
+    setModalMotif(motif);
+
+    const initialBins = new Set(
+      clozeDeletionSet.flatMap(([start, end]) =>
+        Array.from({ length: end - start + 1 }, (_, i) => start + i)
+      )
+    );
+
+    setSelectedBins(initialBins);
+    setIsModalOpen(true);
+  };
+
   const renderClozeDeletions = (motifId, content, clozeDeletions) => {
     if (!clozeDeletions || clozeDeletions.length === 0) return "";
 
@@ -150,7 +163,17 @@ export default function MotifsTab() {
           key={index}
           onMouseEnter={() => setHoveredClozeSet({ motifId, set })}
           onMouseLeave={() => setHoveredClozeSet({ motifId: null, set: null })}
-          style={{ cursor: "pointer", textDecoration: "underline" }}
+          onClick={() =>
+            handleOpenModal(
+              motifs.find((m) => m.uuid === motifId),
+              set
+            )
+          }
+          style={{
+            cursor: "pointer",
+            textDecoration: "underline",
+            color: "gray",
+          }}
         >
           cloze-deletion-{index + 1}
         </span>
@@ -207,12 +230,6 @@ export default function MotifsTab() {
   const handleContentEditableBlur = (e, motifId) => {
     const newContent = e.target.innerText;
     handleSave(motifId, newContent);
-  };
-
-  const handleOpenModal = (motif) => {
-    setModalMotif(motif);
-    setSelectedBins(new Set()); // Reset bins for the new motif
-    setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -415,7 +432,7 @@ export default function MotifsTab() {
                           </Box>
                           <Button
                             size="small"
-                            onClick={() => handleOpenModal(motif)}
+                            onClick={() => handleOpenModal(motif, [])}
                             sx={{ ml: 2 }}
                           >
                             + add
