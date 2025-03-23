@@ -25,6 +25,9 @@ def motifs():
                     "content": motif.content,
                     "created_at": motif.created_at.isoformat(),
                     "citation": motif.citation.title if motif.citation else None,
+                    "cloze_deletions": [cd.mask_tuples for cd in motif.cloze_deletions]
+                    if motif.cloze_deletions
+                    else None,
                 }
                 for motif in motifs
             ]
@@ -47,6 +50,9 @@ def motifs():
                     "uuid": motif.uuid,
                     "content": motif.content,
                     "citation": motif.citation.title if motif.citation else None,
+                    "cloze_deletions": [cd.mask_tuples for cd in motif.cloze_deletions]
+                    if motif.cloze_deletions
+                    else None,
                     "created_at": motif.created_at.isoformat(),
                 }
             )
@@ -77,6 +83,9 @@ def update_or_delete_motif(uuid):
                     "uuid": motif.uuid,
                     "content": motif.content,
                     "citation": motif.citation.title if motif.citation else None,
+                    "cloze_deletions": [cd.mask_tuples for cd in motif.cloze_deletions]
+                    if motif.cloze_deletions
+                    else None,
                     "created_at": motif.created_at.isoformat(),
                 }
             )

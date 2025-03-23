@@ -14,13 +14,20 @@ class TestAPI:
     def citation(self, session):
         return citation_factory(session=session).create()
 
-    def test_get_motifs(self, client, motif):
+    def test_get_motifs(self, session, client, motif):
+        motif_2 = motif_factory(session=session).create()
+        cloze_deletion_factory(session=session).create(motif=motif_2)
+
         response = client.get("/motifs")
         data = json.loads(response.data)
 
         assert response.status_code == 200
-        assert len(data["motifs"]) == 1
+        assert len(data["motifs"]) == 2
         assert data["motifs"][0]["content"] == motif.content
+        assert data["motifs"][0]["cloze_deletions"] is None
+        assert data["motifs"][1]["cloze_deletions"] == [
+            cd.mask_tuples for cd in motif_2.cloze_deletions
+        ]
 
     def test_add_motif_without_citation(self, client):
         response = client.post(
