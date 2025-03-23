@@ -92,8 +92,19 @@ class ClozeDeletionRepository:
     def __init__(self, session):
         self.session = session
 
+    def get_cloze_deletion(self, uuid: str) -> ClozeDeletion:
+        return self.session.query(ClozeDeletion).filter_by(uuid=uuid).one_or_none()
+
     def add_cloze_deletion(self, motif_uuid: str, mask_tuples: list) -> ClozeDeletion:
         cloze_deletion = ClozeDeletion(motif_uuid=motif_uuid, mask_tuples=mask_tuples)
         self.session.add(cloze_deletion)
+        self.session.flush()
+        return cloze_deletion
+
+    def update_cloze_deletion(
+        self, cloze_deletion_uuid: str, mask_tuples: list
+    ) -> ClozeDeletion:
+        cloze_deletion = self.get_cloze_deletion(cloze_deletion_uuid)
+        cloze_deletion.mask_tuples = mask_tuples
         self.session.flush()
         return cloze_deletion

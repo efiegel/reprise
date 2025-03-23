@@ -183,3 +183,47 @@ class TestAPI:
         data = json.loads(response.data)
         assert response.status_code == 200
         assert len(data["motifs"]) == 0
+
+    def test_add_cloze_deletion(self, client, motif):
+        response = client.post(
+            "/cloze_deletions",
+            data=json.dumps(
+                {"motif_uuid": motif.uuid, "mask_tuples": [[0, 2], [4, 6]]}
+            ),
+            content_type="application/json",
+        )
+
+        data = json.loads(response.data)
+        assert response.status_code == 200
+        assert data["mask_tuples"] == [[0, 2], [4, 6]]
+
+        with database_session() as session:
+            motif = session.query(Motif).filter_by(uuid=motif.uuid).one_or_none()
+            assert len(motif.cloze_deletions) == 1
+            assert motif.cloze_deletions[0].mask_tuples == [[0, 2], [4, 6]]
+
+    def test_update_cloze_deletion(self, session, client, motif):
+        cloze_deletion = cloze_deletion_factory(session=session).create(
+            motif=motif, mask_tuples=[[0, 2]]
+        )
+
+        response = client.put(
+            "/cloze_deletions",
+            data=json.dumps(
+                {"uuid": cloze_deletion.uuid, "mask_tuples": [[1, 3], [5, 7]]}
+            ),
+            content_type="application/json",
+        )
+
+        data = json.loads(response.data)
+        assert response.status_code == 200
+        assert data["mask_tuples"] == [[1, 3], [5, 7]]
+
+        with database_session() as session:
+            updated_cloze_deletion = (
+                session.query(Motif)
+                .filter_by(uuid=motif.uuid)
+                .one_or_none()
+                .cloze_deletions[0]
+            )
+            assert updated_cloze_deletion.mask_tuples == [[1, 3], [5, 7]]

@@ -2,7 +2,11 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from reprise.db import database_session
-from reprise.repository import CitationRepository, MotifRepository
+from reprise.repository import (
+    CitationRepository,
+    ClozeDeletionRepository,
+    MotifRepository,
+)
 from reprise.service import Service
 
 app = Flask(__name__)
@@ -162,3 +166,34 @@ def reprise():
             for reprisal in reprisals
         ]
         return jsonify(reprisals_list)
+
+
+@app.route("/cloze_deletions", methods=["POST", "PUT"])
+def cloze_deletions():
+    data = request.get_json()
+    with database_session() as session:
+        repository = ClozeDeletionRepository(session)
+
+        if request.method == "POST":
+            motif_uuid = data.get("motif_uuid")
+            mask_tuples = data.get("mask_tuples")
+            cloze_deletion = repository.add_cloze_deletion(motif_uuid, mask_tuples)
+            return jsonify(
+                {
+                    "uuid": cloze_deletion.uuid,
+                    "mask_tuples": cloze_deletion.mask_tuples,
+                }
+            )
+
+        if request.method == "PUT":
+            cloze_deletion_uuid = data.get("uuid")
+            mask_tuples = data.get("mask_tuples")
+            cloze_deletion = repository.update_cloze_deletion(
+                cloze_deletion_uuid, mask_tuples
+            )
+            return jsonify(
+                {
+                    "uuid": cloze_deletion.uuid,
+                    "mask_tuples": cloze_deletion.mask_tuples,
+                }
+            )

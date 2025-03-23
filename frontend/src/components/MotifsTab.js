@@ -256,11 +256,30 @@ export default function MotifsTab() {
         }
       });
 
-    console.log("Saving tuples:", {
-      uuid: modalMotif.clozeDeletionUuid,
+    const payload = {
       mask_tuples,
-    });
-    // Save the ranges to the backend or update state here
+      ...(modalMotif.clozeDeletionUuid
+        ? { uuid: modalMotif.clozeDeletionUuid }
+        : { motif_uuid: modalMotif.uuid }),
+    };
+
+    const method = modalMotif.clozeDeletionUuid ? "PUT" : "POST";
+
+    fetch("http://127.0.0.1:5000/cloze_deletions", {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Cloze deletion saved:", data);
+      })
+      .catch((error) => {
+        console.error("Error saving cloze deletion:", error);
+      });
+
     handleCloseModal();
   };
 
