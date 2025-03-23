@@ -30,7 +30,7 @@ export default function MotifsTab() {
   const [pageSize] = useState(10);
   const [totalMotifs, setTotalMotifs] = useState(0);
   const [deleteEnabled, setDeleteEnabled] = useState(false);
-  const [showClozeDeletions, setShowClozeDeletions] = useState(false);
+  const [showClozeDeletions, setShowClozeDeletions] = useState(true);
   const [hoveredClozeSet, setHoveredClozeSet] = useState({
     motifId: null,
     set: null,
@@ -136,16 +136,18 @@ export default function MotifsTab() {
   const renderClozeDeletions = (motifId, content, clozeDeletions) => {
     if (!clozeDeletions || clozeDeletions.length === 0) return "";
 
-    return clozeDeletions.map((set, index) => (
-      <div
-        key={index}
-        onMouseEnter={() => setHoveredClozeSet({ motifId, set })}
-        onMouseLeave={() => setHoveredClozeSet({ motifId: null, set: null })}
-        style={{ cursor: "pointer", textDecoration: "underline" }}
-      >
-        hover
-      </div>
-    ));
+    return clozeDeletions
+      .map((set, index) => (
+        <span
+          key={index}
+          onMouseEnter={() => setHoveredClozeSet({ motifId, set })}
+          onMouseLeave={() => setHoveredClozeSet({ motifId: null, set: null })}
+          style={{ cursor: "pointer", textDecoration: "underline" }}
+        >
+          cloze-deletion-{index + 1}
+        </span>
+      ))
+      .reduce((prev, curr) => [prev, ", ", curr]);
   };
 
   const renderHighlightedContent = (motifId, content) => {
@@ -244,9 +246,6 @@ export default function MotifsTab() {
                   <TableCell sx={{ width: "50%" }}>Content</TableCell>
                   <TableCell sx={{ width: "20%" }}>Citation</TableCell>
                   <TableCell sx={{ width: "20%" }}>Created At</TableCell>
-                  {showClozeDeletions && (
-                    <TableCell sx={{ width: "10%" }}>Cloze Deletions</TableCell>
-                  )}
                   {deleteEnabled && (
                     <TableCell sx={{ width: "10%" }}>Actions</TableCell>
                   )}
@@ -275,20 +274,20 @@ export default function MotifsTab() {
                           ? renderHighlightedContent(motif.uuid, motif.content)
                           : motif.content}
                       </div>
+                      {showClozeDeletions && (
+                        <Box mt={1}>
+                          {renderClozeDeletions(
+                            motif.uuid,
+                            motif.content,
+                            motif.cloze_deletions
+                          )}
+                        </Box>
+                      )}
                     </TableCell>
                     <TableCell>{motif.citation}</TableCell>
                     <TableCell>
                       {new Date(motif.created_at).toLocaleString()}
                     </TableCell>
-                    {showClozeDeletions && (
-                      <TableCell>
-                        {renderClozeDeletions(
-                          motif.uuid,
-                          motif.content,
-                          motif.cloze_deletions
-                        )}
-                      </TableCell>
-                    )}
                     {deleteEnabled && (
                       <TableCell>
                         <Button
