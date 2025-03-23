@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Table,
@@ -31,6 +31,10 @@ export default function MotifsTab() {
   const [totalMotifs, setTotalMotifs] = useState(0);
   const [deleteEnabled, setDeleteEnabled] = useState(false);
   const [showClozeDeletions, setShowClozeDeletions] = useState(false);
+  const [hoveredClozeSet, setHoveredClozeSet] = useState({
+    motifId: null,
+    set: null,
+  });
 
   useEffect(() => {
     const fetchMotifs = () => {
@@ -129,14 +133,72 @@ export default function MotifsTab() {
     );
   };
 
-  const renderClozeDeletions = (content, clozeDeletions) => {
+  const renderClozeDeletions = (motifId, content, clozeDeletions) => {
     if (!clozeDeletions || clozeDeletions.length === 0) return "None";
 
     return clozeDeletions
-      .map((set) =>
-        set.map(([start, end]) => content.slice(start, end + 1)).join(", ")
+      .map((set, index) => (
+        <span
+          key={index}
+          onMouseEnter={() => setHoveredClozeSet({ motifId, set })}
+          onMouseLeave={() => setHoveredClozeSet({ motifId: null, set: null })}
+          style={{ cursor: "pointer", textDecoration: "underline" }}
+        >
+          {set.map(([start, end]) => content.slice(start, end + 1)).join(", ")}
+        </span>
+      ))
+      .reduce((prev, curr) => [prev, " | ", curr]);
+  };
+
+  const renderHighlightedContent = (motifId, content) => {
+    if (!hoveredClozeSet.set || hoveredClozeSet.motifId !== motifId) {
+      return content;
+    }
+
+    const highlightedIndexes = new Set(
+      hoveredClozeSet.set.flatMap(([start, end]) =>
+        Array.from({ length: end - start + 1 }, (_, i) => start + i)
       )
-      .join(" | ");
+    );
+
+    return content.split("").map((char, index) => (
+      <span
+        key={index}
+        style={{
+          backgroundColor: highlightedIndexes.has(index)
+            ? "yellow"
+            : "transparent",
+        }}
+      >
+        {char}
+      </span>
+    ));
+  };
+
+  const handleContentEditableInput = (e, motifId) => {
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+    const caretOffset = range.startOffset;
+
+    const newContent = e.target.innerText;
+    handleMotifContentChange(motifId, newContent);
+
+    // Restore caret position
+    window.requestAnimationFrame(() => {
+      const newRange = document.createRange();
+      newRange.setStart(
+        e.target.firstChild,
+        Math.min(caretOffset, newContent.length)
+      );
+      newRange.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+    });
+  };
+
+  const handleContentEditableBlur = (e, motifId) => {
+    const newContent = e.target.innerText;
+    handleSave(motifId, newContent);
   };
 
   return (
@@ -196,16 +258,26 @@ export default function MotifsTab() {
                 {motifs.map((motif) => (
                   <TableRow key={motif.uuid}>
                     <TableCell>
-                      <TextField
-                        fullWidth
-                        multiline
-                        minRows={3}
-                        value={motif.content}
-                        onChange={(e) =>
-                          handleMotifContentChange(motif.uuid, e.target.value)
+                      <div
+                        contentEditable
+                        suppressContentEditableWarning
+                        style={{
+                          border: "1px solid #ccc",
+                          borderRadius: "4px",
+                          padding: "8px",
+                          minHeight: "60px",
+                          whiteSpace: "pre-wrap",
+                          overflowWrap: "break-word",
+                        }}
+                        onInput={(e) =>
+                          handleContentEditableInput(e, motif.uuid)
                         }
-                        onBlur={() => handleSave(motif.uuid, motif.content)}
-                      />
+                        onBlur={(e) => handleContentEditableBlur(e, motif.uuid)}
+                      >
+                        {hoveredClozeSet.motifId === motif.uuid
+                          ? renderHighlightedContent(motif.uuid, motif.content)
+                          : motif.content}
+                      </div>
                     </TableCell>
                     <TableCell>{motif.citation}</TableCell>
                     <TableCell>
@@ -214,6 +286,7 @@ export default function MotifsTab() {
                     {showClozeDeletions && (
                       <TableCell>
                         {renderClozeDeletions(
+                          motif.uuid,
                           motif.content,
                           motif.cloze_deletions
                         )}
