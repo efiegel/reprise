@@ -8,7 +8,7 @@ from reprise.repository import (
     MotifRepository,
     ReprisalRepository,
 )
-from tests.factories import citation_factory, motif_factory
+from tests.factories import citation_factory, cloze_deletion_factory, motif_factory
 
 
 class TestMotifRepository:
@@ -118,6 +118,17 @@ class TestReprisalRepository:
         assert reprisal.uuid is not None
         assert reprisal.created_at is not None
         assert reprisal.set_uuid == set_uuid
+        assert reprisal.motif == motif
+
+    def test_reprise_with_cloze_deletion(self, repository, session):
+        motif = motif_factory(session=session).create(content="the sky is blue")
+        cloze_deletion = cloze_deletion_factory(session=session).create(
+            motif=motif, mask_tuples=[(11, 14)]
+        )
+
+        set_uuid = str(uuid4())
+        reprisal = repository.add_reprisal(motif.uuid, set_uuid, cloze_deletion.uuid)
+        assert reprisal.cloze_deletion == cloze_deletion
         assert reprisal.motif == motif
 
 

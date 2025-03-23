@@ -52,9 +52,13 @@ class Reprisal(Base):
     uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     motif_uuid = Column(String(36), ForeignKey("motif.uuid"), nullable=False)
     set_uuid = Column(String(36), nullable=False)
+    cloze_deletion_uuid = Column(
+        String(36), ForeignKey("cloze_deletion.uuid"), nullable=True
+    )
     created_at = Column(DateTime, default=datetime.now, nullable=False)
 
     motif = relationship("Motif", backref="reprisals")
+    cloze_deletion = relationship("ClozeDeletion", backref="reprisals")
 
 
 class ClozeDeletion(Base):

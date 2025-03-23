@@ -72,8 +72,14 @@ class ReprisalRepository:
     def __init__(self, session):
         self.session = session
 
-    def add_reprisal(self, motif_uuid: str, set_uuid: str) -> Reprisal:
-        reprisal = Reprisal(motif_uuid=motif_uuid, set_uuid=set_uuid)
+    def add_reprisal(
+        self, motif_uuid: str, set_uuid: str, cloze_deletion_uuid: str = None
+    ) -> Reprisal:
+        reprisal = Reprisal(
+            motif_uuid=motif_uuid,
+            set_uuid=set_uuid,
+            cloze_deletion_uuid=cloze_deletion_uuid,
+        )
         self.session.add(reprisal)
         self.session.flush()
         return reprisal
