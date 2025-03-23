@@ -275,6 +275,22 @@ export default function MotifsTab() {
       .then((response) => response.json())
       .then((data) => {
         console.log("Cloze deletion saved:", data);
+
+        // Update the motif's cloze deletions list
+        setMotifs((prevMotifs) =>
+          prevMotifs.map((motif) =>
+            motif.uuid === modalMotif.uuid
+              ? {
+                  ...motif,
+                  cloze_deletions: modalMotif.clozeDeletionUuid
+                    ? motif.cloze_deletions.map((cd) =>
+                        cd.uuid === data.uuid ? data : cd
+                      )
+                    : [...(motif.cloze_deletions || []), data],
+                }
+              : motif
+          )
+        );
       })
       .catch((error) => {
         console.error("Error saving cloze deletion:", error);
