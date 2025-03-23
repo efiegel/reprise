@@ -141,11 +141,15 @@ export default function MotifsTab() {
     );
   };
 
-  const handleOpenModal = (motif, clozeDeletionSet) => {
-    setModalMotif(motif);
+  const handleOpenModal = (
+    motif,
+    clozeDeletionSet,
+    clozeDeletionUuid = null
+  ) => {
+    setModalMotif({ ...motif, clozeDeletionUuid });
 
     const initialBins = new Set(
-      clozeDeletionSet.flatMap(([start, end]) =>
+      (clozeDeletionSet || []).flatMap(([start, end]) =>
         Array.from({ length: end - start + 1 }, (_, i) => start + i)
       )
     );
@@ -158,15 +162,16 @@ export default function MotifsTab() {
     if (!clozeDeletions || clozeDeletions.length === 0) return "";
 
     return clozeDeletions
-      .map((set, index) => (
+      .map(({ uuid, mask_tuples: set }, index) => (
         <span
-          key={index}
+          key={uuid || index} // Ensure a unique key
           onMouseEnter={() => setHoveredClozeSet({ motifId, set })}
           onMouseLeave={() => setHoveredClozeSet({ motifId: null, set: null })}
           onClick={() =>
             handleOpenModal(
               motifs.find((m) => m.uuid === motifId),
-              set
+              set,
+              uuid
             )
           }
           style={{
@@ -283,7 +288,7 @@ export default function MotifsTab() {
   };
 
   const handleSaveTuples = () => {
-    const ranges = [];
+    const mask_tuples = [];
     let start = null;
 
     [...selectedBins]
@@ -291,12 +296,15 @@ export default function MotifsTab() {
       .forEach((index, i, arr) => {
         if (start === null) start = index;
         if (i === arr.length - 1 || arr[i + 1] !== index + 1) {
-          ranges.push([start, index]);
+          mask_tuples.push([start, index]);
           start = null;
         }
       });
 
-    console.log("Saving tuples:", ranges);
+    console.log("Saving tuples:", {
+      uuid: modalMotif.clozeDeletionUuid,
+      mask_tuples,
+    });
     // Save the ranges to the backend or update state here
     handleCloseModal();
   };

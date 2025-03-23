@@ -25,7 +25,10 @@ def motifs():
                     "content": motif.content,
                     "created_at": motif.created_at.isoformat(),
                     "citation": motif.citation.title if motif.citation else None,
-                    "cloze_deletions": [cd.mask_tuples for cd in motif.cloze_deletions]
+                    "cloze_deletions": [
+                        {"uuid": cd.uuid, "mask_tuples": cd.mask_tuples}
+                        for cd in motif.cloze_deletions
+                    ]
                     if motif.cloze_deletions
                     else None,
                 }
@@ -50,7 +53,10 @@ def motifs():
                     "uuid": motif.uuid,
                     "content": motif.content,
                     "citation": motif.citation.title if motif.citation else None,
-                    "cloze_deletions": [cd.mask_tuples for cd in motif.cloze_deletions]
+                    "cloze_deletions": [
+                        {"uuid": cd.uuid, "mask_tuples": cd.mask_tuples}
+                        for cd in motif.cloze_deletions
+                    ]
                     if motif.cloze_deletions
                     else None,
                     "created_at": motif.created_at.isoformat(),
@@ -83,7 +89,10 @@ def update_or_delete_motif(uuid):
                     "uuid": motif.uuid,
                     "content": motif.content,
                     "citation": motif.citation.title if motif.citation else None,
-                    "cloze_deletions": [cd.mask_tuples for cd in motif.cloze_deletions]
+                    "cloze_deletions": [
+                        {"uuid": cd.uuid, "mask_tuples": cd.mask_tuples}
+                        for cd in motif.cloze_deletions
+                    ]
                     if motif.cloze_deletions
                     else None,
                     "created_at": motif.created_at.isoformat(),
@@ -135,7 +144,14 @@ def reprise():
             {
                 "uuid": reprisal.motif.uuid,  # motif uuid
                 "content": reprisal.motif.content,
-                "cloze_deletions": reprisal.cloze_deletion.mask_tuples
+                "cloze_deletions": [
+                    {
+                        "uuid": reprisal.cloze_deletion.uuid,
+                        "mask_tuples": reprisal.cloze_deletion.mask_tuples,
+                    }
+                    if reprisal.cloze_deletion
+                    else None
+                ]
                 if reprisal.cloze_deletion
                 else None,
                 "created_at": reprisal.motif.created_at.isoformat(),

@@ -16,7 +16,7 @@ class TestAPI:
 
     def test_get_motifs(self, session, client, motif):
         motif_2 = motif_factory(session=session).create()
-        cloze_deletion_factory(session=session).create(motif=motif_2)
+        cloze_deletion = cloze_deletion_factory(session=session).create(motif=motif_2)
 
         response = client.get("/motifs")
         data = json.loads(response.data)
@@ -26,7 +26,7 @@ class TestAPI:
         assert data["motifs"][0]["content"] == motif.content
         assert data["motifs"][0]["cloze_deletions"] is None
         assert data["motifs"][1]["cloze_deletions"] == [
-            cd.mask_tuples for cd in motif_2.cloze_deletions
+            {"uuid": cloze_deletion.uuid, "mask_tuples": cloze_deletion.mask_tuples}
         ]
 
     def test_add_motif_without_citation(self, client):
@@ -143,7 +143,7 @@ class TestAPI:
 
     def test_reprise_motifs(self, session, client, motif):
         motif_2 = motif_factory(session=session).create()
-        cloze_deletion_factory(session=session).create(motif=motif_2)
+        cloze_deletion = cloze_deletion_factory(session=session).create(motif=motif_2)
 
         response = client.post("/reprise")
         data = json.loads(response.data)
@@ -152,7 +152,9 @@ class TestAPI:
         assert len(data) > 0
         assert data[0]["content"] == motif.content
         assert data[0]["cloze_deletions"] is None
-        assert data[1]["cloze_deletions"] == motif_2.cloze_deletions[0].mask_tuples
+        assert data[1]["cloze_deletions"] == [
+            {"uuid": cloze_deletion.uuid, "mask_tuples": cloze_deletion.mask_tuples}
+        ]
 
     def test_get_motifs_paginated(self, client, session):
         motif_factory(session=session).create_batch(12)
