@@ -197,3 +197,11 @@ def cloze_deletions():
                     "mask_tuples": cloze_deletion.mask_tuples,
                 }
             )
+
+
+@app.route("/cloze_deletions/<uuid>", methods=["DELETE"])
+def delete_cloze_deletion(uuid):
+    with database_session() as session:
+        repository = ClozeDeletionRepository(session)
+        repository.delete_cloze_deletion(uuid)
+        return jsonify({"message": "Cloze deletion deleted"})

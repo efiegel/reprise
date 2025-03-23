@@ -174,6 +174,13 @@ class TestClozeDeletionRepository:
         assert updated_cloze_deletion.mask_tuples == [(4, 6), (11, 14)]
         assert updated_cloze_deletion.motif == motif
 
+    def test_delete_cloze_deletion(self, repository, session):
+        motif = motif_factory(session=session).create(content="the sky is blue")
+        cloze_deletion = repository.add_cloze_deletion(motif.uuid, [(11, 14)])
+
+        repository.delete_cloze_deletion(cloze_deletion.uuid)
+        assert repository.get_cloze_deletion(cloze_deletion.uuid) is None
+
     def test_mask(self, repository, session):
         motif_content = "the sky is blue"
         motif = motif_factory(session=session).create(content=motif_content)

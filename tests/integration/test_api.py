@@ -227,3 +227,21 @@ class TestAPI:
                 .cloze_deletions[0]
             )
             assert updated_cloze_deletion.mask_tuples == [[1, 3], [5, 7]]
+
+    def test_delete_cloze_deletion(self, session, client, motif):
+        cloze_deletion = cloze_deletion_factory(session=session).create(
+            motif=motif, mask_tuples=[[0, 2]]
+        )
+
+        response = client.delete(f"/cloze_deletions/{cloze_deletion.uuid}")
+        assert response.status_code == 200
+        assert json.loads(response.data)["message"] == "Cloze deletion deleted"
+
+        with database_session() as session:
+            assert (
+                session.query(Motif)
+                .filter_by(uuid=motif.uuid)
+                .one_or_none()
+                .cloze_deletions
+                == []
+            )

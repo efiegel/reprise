@@ -299,6 +299,40 @@ export default function MotifsTab() {
     handleCloseModal();
   };
 
+  const handleDeleteClozeDeletion = () => {
+    if (!modalMotif.clozeDeletionUuid) return;
+
+    fetch(
+      `http://127.0.0.1:5000/cloze_deletions/${modalMotif.clozeDeletionUuid}`,
+      {
+        method: "DELETE",
+      }
+    )
+      .then((response) => response.json())
+      .then(() => {
+        console.log("Cloze deletion deleted");
+
+        // Remove the cloze deletion from the motif's list
+        setMotifs((prevMotifs) =>
+          prevMotifs.map((motif) =>
+            motif.uuid === modalMotif.uuid
+              ? {
+                  ...motif,
+                  cloze_deletions: motif.cloze_deletions.filter(
+                    (cd) => cd.uuid !== modalMotif.clozeDeletionUuid
+                  ),
+                }
+              : motif
+          )
+        );
+      })
+      .catch((error) => {
+        console.error("Error deleting cloze deletion:", error);
+      });
+
+    handleCloseModal();
+  };
+
   const handleMouseDown = (index) => {
     setIsDragging(true);
     setSelectedBins(
@@ -533,6 +567,16 @@ export default function MotifsTab() {
           >
             Save
           </Button>
+          {modalMotif?.clozeDeletionUuid && (
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleDeleteClozeDeletion}
+              sx={{ mr: 1 }}
+            >
+              Delete
+            </Button>
+          )}
           <Button variant="outlined" onClick={handleCloseModal}>
             Cancel
           </Button>

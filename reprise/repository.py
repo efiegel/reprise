@@ -108,3 +108,9 @@ class ClozeDeletionRepository:
         cloze_deletion.mask_tuples = mask_tuples
         self.session.flush()
         return cloze_deletion
+
+    def delete_cloze_deletion(self, uuid: str) -> None:
+        cloze_deletion = self.get_cloze_deletion(uuid)
+        if cloze_deletion:
+            self.session.delete(cloze_deletion)
+            self.session.flush()
