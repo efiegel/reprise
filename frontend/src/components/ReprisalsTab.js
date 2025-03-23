@@ -80,7 +80,7 @@ export default function ReprisalsTab() {
               {reprisals.map((reprisal) => (
                 <TableRow key={reprisal.uuid}>
                   <TableCell>
-                    {unmaskedRows[reprisal.uuid]
+                    {unmaskedRows[reprisal.uuid] && reprisal.cloze_deletions
                       ? // Render unmasked content with bold and green for masked sections
                         reprisal.cloze_deletions
                           .reduce(
@@ -119,12 +119,14 @@ export default function ReprisalsTab() {
                   </TableCell>
                   <TableCell>{reprisal.citation}</TableCell>
                   <TableCell>
-                    <Button
-                      variant="outlined"
-                      onClick={() => toggleUnmask(reprisal.uuid)}
-                    >
-                      {unmaskedRows[reprisal.uuid] ? "Mask" : "Unmask"}
-                    </Button>
+                    {reprisal.cloze_deletions && (
+                      <Button
+                        variant="outlined"
+                        onClick={() => toggleUnmask(reprisal.uuid)}
+                      >
+                        {unmaskedRows[reprisal.uuid] ? "Mask" : "Unmask"}
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
