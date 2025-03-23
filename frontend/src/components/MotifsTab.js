@@ -242,51 +242,6 @@ export default function MotifsTab() {
     setModalMotif(null);
   };
 
-  const parseTuples = (input) => {
-    return input
-      .split(",")
-      .map((tuple) => tuple.trim().match(/\d+/g)?.map(Number))
-      .filter((range) => range && range.length === 2);
-  };
-
-  const renderHighlightedModalContent = (content, ranges) => {
-    const highlightedIndexes = new Set(
-      ranges.flatMap(([start, end]) =>
-        Array.from({ length: end - start + 1 }, (_, i) => start + i)
-      )
-    );
-
-    return content.split("").map((char, index) => (
-      <span
-        key={index}
-        style={{
-          backgroundColor: highlightedIndexes.has(index)
-            ? "yellow"
-            : "transparent",
-          cursor: "text",
-        }}
-      >
-        {char}
-      </span>
-    ));
-  };
-
-  const handleTextHighlight = () => {
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-
-    const range = selection.getRangeAt(0);
-    const start = range.startOffset;
-    const end = range.endOffset - 1;
-
-    if (start >= 0 && end >= start) {
-      setHighlightedRanges((prev) => [...prev, [start, end]]);
-    }
-
-    // Clear the selection
-    selection.removeAllRanges();
-  };
-
   const handleSaveTuples = () => {
     const mask_tuples = [];
     let start = null;
