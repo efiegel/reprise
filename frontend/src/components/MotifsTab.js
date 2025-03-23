@@ -260,7 +260,6 @@ export default function MotifsTab() {
                         contentEditable
                         suppressContentEditableWarning
                         style={{
-                          border: "1px solid #ccc",
                           borderRadius: "4px",
                           padding: "8px",
                           minHeight: "60px",
