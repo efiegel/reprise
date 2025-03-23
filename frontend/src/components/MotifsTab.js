@@ -136,18 +136,16 @@ export default function MotifsTab() {
   const renderClozeDeletions = (motifId, content, clozeDeletions) => {
     if (!clozeDeletions || clozeDeletions.length === 0) return "None";
 
-    return clozeDeletions
-      .map((set, index) => (
-        <span
-          key={index}
-          onMouseEnter={() => setHoveredClozeSet({ motifId, set })}
-          onMouseLeave={() => setHoveredClozeSet({ motifId: null, set: null })}
-          style={{ cursor: "pointer", textDecoration: "underline" }}
-        >
-          {set.map(([start, end]) => content.slice(start, end + 1)).join(", ")}
-        </span>
-      ))
-      .reduce((prev, curr) => [prev, " | ", curr]);
+    return clozeDeletions.map((set, index) => (
+      <div
+        key={index}
+        onMouseEnter={() => setHoveredClozeSet({ motifId, set })}
+        onMouseLeave={() => setHoveredClozeSet({ motifId: null, set: null })}
+        style={{ cursor: "pointer", textDecoration: "underline" }}
+      >
+        {`Set ${index + 1}`}
+      </div>
+    ));
   };
 
   const renderHighlightedContent = (motifId, content) => {
