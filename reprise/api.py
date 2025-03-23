@@ -121,14 +121,16 @@ def create_citation():
 def reprise():
     with database_session() as session:
         service = Service(session)
-        reprised_motifs = service.reprise_motifs()
-        motifs_list = [
+        reprisals = service.reprise()
+        reprisals_list = [
             {
-                "uuid": motif.uuid,
-                "content": motif.content,
-                "created_at": motif.created_at.isoformat(),
-                "citation": motif.citation.title if motif.citation else None,
+                "uuid": reprisal.motif.uuid,  # motif uuid
+                "content": reprisal.motif.content,
+                "created_at": reprisal.motif.created_at.isoformat(),
+                "citation": reprisal.motif.citation.title
+                if reprisal.motif.citation
+                else None,
             }
-            for motif in reprised_motifs
+            for reprisal in reprisals
         ]
-        return jsonify(motifs_list)
+        return jsonify(reprisals_list)
