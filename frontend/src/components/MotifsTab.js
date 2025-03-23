@@ -470,9 +470,6 @@ export default function MotifsTab() {
           }}
           onMouseLeave={() => setIsDragging(false)} // Ensure dragging stops when leaving the modal
         >
-          <Typography variant="h6" mb={2}>
-            Add Cloze Deletions
-          </Typography>
           {modalMotif && (
             <Box
               mb={2}
@@ -490,8 +487,8 @@ export default function MotifsTab() {
             </Box>
           )}
           <Typography variant="body2" mb={2}>
-            Click and drag over the text to select or deselect sections for
-            cloze deletions. You can make multiple selections.
+            Click and drag over the text to select or deselect sections for a
+            cloze deletion set.
           </Typography>
           <Button
             variant="contained"
