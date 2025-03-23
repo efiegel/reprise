@@ -91,7 +91,10 @@ export default function MotifTable({
           cloze-deletion-{index + 1}
         </span>
       ))
-      .reduce((prev, curr) => [prev, ", ", curr], []);
+      .reduce(
+        (prev, curr, index) => (index === 0 ? [curr] : [...prev, ", ", curr]),
+        []
+      );
   };
 
   const renderHighlightedContent = (motifId, content) => {
