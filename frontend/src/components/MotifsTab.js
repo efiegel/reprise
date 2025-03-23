@@ -134,7 +134,7 @@ export default function MotifsTab() {
   };
 
   const renderClozeDeletions = (motifId, content, clozeDeletions) => {
-    if (!clozeDeletions || clozeDeletions.length === 0) return "None";
+    if (!clozeDeletions || clozeDeletions.length === 0) return "";
 
     return clozeDeletions.map((set, index) => (
       <div
@@ -143,7 +143,7 @@ export default function MotifsTab() {
         onMouseLeave={() => setHoveredClozeSet({ motifId: null, set: null })}
         style={{ cursor: "pointer", textDecoration: "underline" }}
       >
-        {`Set ${index + 1}`}
+        hover
       </div>
     ));
   };
