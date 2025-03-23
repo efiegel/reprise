@@ -2,7 +2,7 @@ import pytest
 from flask import json
 
 from reprise.db import Citation, Motif, database_session
-from tests.factories import citation_factory, motif_factory
+from tests.factories import citation_factory, cloze_deletion_factory, motif_factory
 
 
 class TestAPI:
@@ -134,13 +134,18 @@ class TestAPI:
             motif = session.query(Motif).filter_by(uuid=motif.uuid).one_or_none()
             assert motif.citation.title == citation.title
 
-    def test_reprise_motifs(self, client, motif):
+    def test_reprise_motifs(self, session, client, motif):
+        motif_2 = motif_factory(session=session).create()
+        cloze_deletion_factory(session=session).create(motif=motif_2)
+
         response = client.post("/reprise")
         data = json.loads(response.data)
 
         assert response.status_code == 200
         assert len(data) > 0
         assert data[0]["content"] == motif.content
+        assert data[0]["cloze_deletions"] is None
+        assert data[1]["cloze_deletions"] == motif_2.cloze_deletions[0].mask_tuples
 
     def test_get_motifs_paginated(self, client, session):
         motif_factory(session=session).create_batch(12)

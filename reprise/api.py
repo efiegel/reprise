@@ -126,6 +126,9 @@ def reprise():
             {
                 "uuid": reprisal.motif.uuid,  # motif uuid
                 "content": reprisal.motif.content,
+                "cloze_deletions": reprisal.cloze_deletion.mask_tuples
+                if reprisal.cloze_deletion
+                else None,
                 "created_at": reprisal.motif.created_at.isoformat(),
                 "citation": reprisal.motif.citation.title
                 if reprisal.motif.citation
