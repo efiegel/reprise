@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { motifService } from "../services/motifService";
 
-export function useMotifData(page, pageSize) {
+export function useMotifs(page, pageSize) {
   const [motifs, setMotifs] = useState([]);
   const [citations, setCitations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

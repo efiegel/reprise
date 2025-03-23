@@ -6,7 +6,7 @@ import {
   FormControlLabel,
   Switch,
 } from "@mui/material";
-import { useMotifData } from "../hooks/useMotifData";
+import { useMotifs } from "../hooks/useMotifs";
 import { motifService } from "../services/motifService";
 import MotifForm from "./MotifsTab/MotifForm";
 import MotifTable from "./MotifsTab/MotifTable";
@@ -37,7 +37,7 @@ export default function MotifsTab() {
     hoveredClozeSet,
     setHoveredClozeSet,
     fetchMotifs,
-  } = useMotifData(page, pageSize);
+  } = useMotifs(page, pageSize);
 
   useEffect(() => {
     fetchMotifs();
