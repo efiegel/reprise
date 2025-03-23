@@ -9,6 +9,7 @@ import {
   Paper,
   Button,
   CircularProgress,
+  Typography,
 } from "@mui/material";
 
 const applyMasking = (content, maskTuples, mask) => {
@@ -30,6 +31,14 @@ const applyMasking = (content, maskTuples, mask) => {
 export default function ReprisalsTab() {
   const [reprisals, setReprisals] = useState([]);
   const [repriseLoading, setRepriseLoading] = useState(false);
+  const [unmaskedRows, setUnmaskedRows] = useState({}); // Track unmasked rows by UUID
+
+  const toggleUnmask = (uuid) => {
+    setUnmaskedRows((prev) => ({
+      ...prev,
+      [uuid]: !prev[uuid],
+    }));
+  };
 
   const fetchReprisals = () => {
     setRepriseLoading(true);
@@ -43,9 +52,10 @@ export default function ReprisalsTab() {
       .then((data) => {
         const processedData = data.map((reprisal) => ({
           ...reprisal,
-          content: reprisal.cloze_deletions
+          maskedContent: reprisal.cloze_deletions
             ? applyMasking(reprisal.content, reprisal.cloze_deletions, " ___ ")
             : reprisal.content,
+          originalContent: reprisal.content, // Store the original unmasked content
         }));
         setReprisals(processedData);
         setRepriseLoading(false);
@@ -69,8 +79,53 @@ export default function ReprisalsTab() {
             <TableBody>
               {reprisals.map((reprisal) => (
                 <TableRow key={reprisal.uuid}>
-                  <TableCell>{reprisal.content}</TableCell>
+                  <TableCell>
+                    {unmaskedRows[reprisal.uuid]
+                      ? // Render unmasked content with bold and green for masked sections
+                        reprisal.cloze_deletions
+                          .reduce(
+                            (acc, [start, end], index) => {
+                              const before = reprisal.originalContent.slice(
+                                acc.lastIndex,
+                                start
+                              );
+                              const unmasked = reprisal.originalContent.slice(
+                                start,
+                                end + 1
+                              );
+                              acc.elements.push(
+                                <span key={`before-${index}`}>{before}</span>
+                              );
+                              acc.elements.push(
+                                <Typography
+                                  key={`unmasked-${index}`}
+                                  component="span"
+                                  sx={{ color: "green", fontWeight: "bold" }}
+                                >
+                                  {unmasked}
+                                </Typography>
+                              );
+                              acc.lastIndex = end + 1;
+                              return acc;
+                            },
+                            { elements: [], lastIndex: 0 }
+                          )
+                          .elements.concat(
+                            reprisal.originalContent.slice(
+                              reprisal.cloze_deletions.at(-1)[1] + 1
+                            )
+                          )
+                      : reprisal.maskedContent}
+                  </TableCell>
                   <TableCell>{reprisal.citation}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      onClick={() => toggleUnmask(reprisal.uuid)}
+                    >
+                      {unmaskedRows[reprisal.uuid] ? "Mask" : "Unmask"}
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
