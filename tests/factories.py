@@ -43,6 +43,7 @@ def cloze_deletion_factory(session):
 
         uuid = factory.Faker("uuid4")
         created_at = factory.Faker("date_time")
+        mask_tuples = [(0, 1)]  # not a sensible mask, just a populated one
 
         motif = factory.SubFactory(motif_factory(session))
 

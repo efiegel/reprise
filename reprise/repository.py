@@ -17,6 +17,9 @@ class MotifRepository:
     def get_motifs(self) -> list[Motif]:
         return self.session.query(Motif).all()
 
+    def get_motifs_with_cloze_deletions(self) -> list[Motif]:
+        return self.session.query(Motif).join(Motif.cloze_deletions).all()  # inner join
+
     def get_motifs_paginated(self, page: int, page_size: int) -> list[Motif]:
         offset = (page - 1) * page_size
         return (

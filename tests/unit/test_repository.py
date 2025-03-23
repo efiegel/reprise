@@ -77,6 +77,13 @@ class TestMotifRepository:
         motif_factory(session=session).create_batch(10)
         assert repository.get_motifs_count() == 10
 
+    def test_get_motifs_with_cloze_deletions(self, session, repository):
+        motif_with_cd = motif_factory(session=session).create()
+        cloze_deletion_factory(session=session).create(motif=motif_with_cd)
+
+        motif_factory(session=session).create()  # motif without cloze deletion
+        assert len(repository.get_motifs_with_cloze_deletions()) == 1
+
 
 class TestCitationRepository:
     @pytest.fixture
