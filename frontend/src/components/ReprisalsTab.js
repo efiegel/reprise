@@ -11,6 +11,22 @@ import {
   CircularProgress,
 } from "@mui/material";
 
+const applyMasking = (content, maskTuples, mask) => {
+  let maskedContent = content;
+  let nRemovedCharacters = 0;
+
+  maskTuples.forEach(([start, end]) => {
+    start -= nRemovedCharacters;
+    end -= nRemovedCharacters;
+
+    maskedContent =
+      maskedContent.slice(0, start) + mask + maskedContent.slice(end + 1);
+    nRemovedCharacters += end - start + 1 - mask.length;
+  });
+
+  return maskedContent;
+};
+
 export default function ReprisalsTab() {
   const [reprisals, setReprisals] = useState([]);
   const [repriseLoading, setRepriseLoading] = useState(false);
@@ -25,7 +41,13 @@ export default function ReprisalsTab() {
     })
       .then((response) => response.json())
       .then((data) => {
-        setReprisals(data);
+        const processedData = data.map((reprisal) => ({
+          ...reprisal,
+          content: reprisal.cloze_deletions
+            ? applyMasking(reprisal.content, reprisal.cloze_deletions, " ___ ")
+            : reprisal.content,
+        }));
+        setReprisals(processedData);
         setRepriseLoading(false);
       })
       .catch((error) => {
