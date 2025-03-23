@@ -129,6 +129,16 @@ export default function MotifsTab() {
     );
   };
 
+  const renderClozeDeletions = (content, clozeDeletions) => {
+    if (!clozeDeletions || clozeDeletions.length === 0) return "None";
+
+    return clozeDeletions
+      .map((set) =>
+        set.map(([start, end]) => content.slice(start, end + 1)).join(", ")
+      )
+      .join(" | ");
+  };
+
   return (
     <Box>
       <Box mb={3}>
@@ -203,9 +213,10 @@ export default function MotifsTab() {
                     </TableCell>
                     {showClozeDeletions && (
                       <TableCell>
-                        {motif.cloze_deletions
-                          ? JSON.stringify(motif.cloze_deletions)
-                          : "None"}
+                        {renderClozeDeletions(
+                          motif.content,
+                          motif.cloze_deletions
+                        )}
                       </TableCell>
                     )}
                     {deleteEnabled && (
