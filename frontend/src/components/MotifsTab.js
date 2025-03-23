@@ -30,6 +30,7 @@ export default function MotifsTab() {
   const [pageSize] = useState(10);
   const [totalMotifs, setTotalMotifs] = useState(0);
   const [deleteEnabled, setDeleteEnabled] = useState(false);
+  const [showClozeDeletions, setShowClozeDeletions] = useState(false);
 
   useEffect(() => {
     const fetchMotifs = () => {
@@ -173,6 +174,9 @@ export default function MotifsTab() {
                   <TableCell sx={{ width: "50%" }}>Content</TableCell>
                   <TableCell sx={{ width: "20%" }}>Citation</TableCell>
                   <TableCell sx={{ width: "20%" }}>Created At</TableCell>
+                  {showClozeDeletions && (
+                    <TableCell sx={{ width: "10%" }}>Cloze Deletions</TableCell>
+                  )}
                   {deleteEnabled && (
                     <TableCell sx={{ width: "10%" }}>Actions</TableCell>
                   )}
@@ -197,6 +201,13 @@ export default function MotifsTab() {
                     <TableCell>
                       {new Date(motif.created_at).toLocaleString()}
                     </TableCell>
+                    {showClozeDeletions && (
+                      <TableCell>
+                        {motif.cloze_deletions
+                          ? JSON.stringify(motif.cloze_deletions)
+                          : "None"}
+                      </TableCell>
+                    )}
                     {deleteEnabled && (
                       <TableCell>
                         <Button
@@ -231,6 +242,18 @@ export default function MotifsTab() {
             />
           }
           label="Show delete buttons"
+        />
+      </Box>
+      <Box mt={3}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showClozeDeletions}
+              onChange={() => setShowClozeDeletions((prev) => !prev)}
+            />
+          }
+          label="Show cloze deletions"
+          sx={{ mb: 2 }}
         />
       </Box>
     </Box>
