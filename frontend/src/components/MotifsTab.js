@@ -166,7 +166,7 @@ export default function MotifsTab() {
         key={index}
         style={{
           backgroundColor: highlightedIndexes.has(index)
-            ? "yellow"
+            ? "gray"
             : "transparent",
         }}
       >
