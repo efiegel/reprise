@@ -2,7 +2,7 @@ import pytest
 from flask import json
 
 from reprise.db import Citation, Motif, database_session
-from tests.factories import citation_factory, motif_factory
+from tests.factories import citation_factory, cloze_deletion_factory, motif_factory
 
 
 class TestAPI:
@@ -14,13 +14,19 @@ class TestAPI:
     def citation(self, session):
         return citation_factory(session=session).create()
 
-    def test_get_motifs(self, client, motif):
+    def test_get_motifs(self, session, client):
+        motif = motif_factory(session=session).create()
+        cloze_deletion = cloze_deletion_factory(session=session).create(motif=motif)
+
         response = client.get("/motifs")
         data = json.loads(response.data)
 
         assert response.status_code == 200
         assert len(data["motifs"]) == 1
         assert data["motifs"][0]["content"] == motif.content
+        assert data["motifs"][0]["cloze_deletions"] == [
+            {"uuid": cloze_deletion.uuid, "mask_tuples": cloze_deletion.mask_tuples}
+        ]
 
     def test_add_motif_without_citation(self, client):
         response = client.post(
@@ -134,13 +140,20 @@ class TestAPI:
             motif = session.query(Motif).filter_by(uuid=motif.uuid).one_or_none()
             assert motif.citation.title == citation.title
 
-    def test_reprise_motifs(self, client, motif):
+    def test_reprise_motifs(self, session, client, motif):
+        motif_2 = motif_factory(session=session).create()
+        cloze_deletion = cloze_deletion_factory(session=session).create(motif=motif_2)
+
         response = client.post("/reprise")
         data = json.loads(response.data)
 
         assert response.status_code == 200
         assert len(data) > 0
         assert data[0]["content"] == motif.content
+        assert data[0]["cloze_deletions"] is None
+        assert data[1]["cloze_deletions"] == [
+            {"uuid": cloze_deletion.uuid, "mask_tuples": cloze_deletion.mask_tuples}
+        ]
 
     def test_get_motifs_paginated(self, client, session):
         motif_factory(session=session).create_batch(12)
@@ -169,3 +182,65 @@ class TestAPI:
         data = json.loads(response.data)
         assert response.status_code == 200
         assert len(data["motifs"]) == 0
+
+    def test_add_cloze_deletion(self, client, motif):
+        response = client.post(
+            "/cloze_deletions",
+            data=json.dumps(
+                {"motif_uuid": motif.uuid, "mask_tuples": [[0, 2], [4, 6]]}
+            ),
+            content_type="application/json",
+        )
+
+        data = json.loads(response.data)
+        assert response.status_code == 200
+        assert data["mask_tuples"] == [[0, 2], [4, 6]]
+
+        with database_session() as session:
+            motif = session.query(Motif).filter_by(uuid=motif.uuid).one_or_none()
+            assert len(motif.cloze_deletions) == 1
+            assert motif.cloze_deletions[0].mask_tuples == [[0, 2], [4, 6]]
+
+    def test_update_cloze_deletion(self, session, client, motif):
+        cloze_deletion = cloze_deletion_factory(session=session).create(
+            motif=motif, mask_tuples=[[0, 2]]
+        )
+
+        response = client.put(
+            "/cloze_deletions",
+            data=json.dumps(
+                {"uuid": cloze_deletion.uuid, "mask_tuples": [[1, 3], [5, 7]]}
+            ),
+            content_type="application/json",
+        )
+
+        data = json.loads(response.data)
+        assert response.status_code == 200
+        assert data["mask_tuples"] == [[1, 3], [5, 7]]
+
+        with database_session() as session:
+            updated_cloze_deletion = (
+                session.query(Motif)
+                .filter_by(uuid=motif.uuid)
+                .one_or_none()
+                .cloze_deletions[0]
+            )
+            assert updated_cloze_deletion.mask_tuples == [[1, 3], [5, 7]]
+
+    def test_delete_cloze_deletion(self, session, client, motif):
+        cloze_deletion = cloze_deletion_factory(session=session).create(
+            motif=motif, mask_tuples=[[0, 2]]
+        )
+
+        response = client.delete(f"/cloze_deletions/{cloze_deletion.uuid}")
+        assert response.status_code == 200
+        assert json.loads(response.data)["message"] == "Cloze deletion deleted"
+
+        with database_session() as session:
+            assert (
+                session.query(Motif)
+                .filter_by(uuid=motif.uuid)
+                .one_or_none()
+                .cloze_deletions
+                == []
+            )

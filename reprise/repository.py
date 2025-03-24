@@ -1,4 +1,4 @@
-from reprise.db import Citation, Motif, Reprisal
+from reprise.db import Citation, ClozeDeletion, Motif, Reprisal
 
 
 class MotifRepository:
@@ -16,6 +16,9 @@ class MotifRepository:
 
     def get_motifs(self) -> list[Motif]:
         return self.session.query(Motif).all()
+
+    def get_motifs_with_cloze_deletions(self) -> list[Motif]:
+        return self.session.query(Motif).join(Motif.cloze_deletions).all()  # inner join
 
     def get_motifs_paginated(self, page: int, page_size: int) -> list[Motif]:
         offset = (page - 1) * page_size
@@ -72,8 +75,42 @@ class ReprisalRepository:
     def __init__(self, session):
         self.session = session
 
-    def add_reprisal(self, motif_uuid: str, set_uuid: str) -> Reprisal:
-        reprisal = Reprisal(motif_uuid=motif_uuid, set_uuid=set_uuid)
+    def add_reprisal(
+        self, motif_uuid: str, set_uuid: str, cloze_deletion_uuid: str = None
+    ) -> Reprisal:
+        reprisal = Reprisal(
+            motif_uuid=motif_uuid,
+            set_uuid=set_uuid,
+            cloze_deletion_uuid=cloze_deletion_uuid,
+        )
         self.session.add(reprisal)
         self.session.flush()
         return reprisal
+
+
+class ClozeDeletionRepository:
+    def __init__(self, session):
+        self.session = session
+
+    def get_cloze_deletion(self, uuid: str) -> ClozeDeletion:
+        return self.session.query(ClozeDeletion).filter_by(uuid=uuid).one_or_none()
+
+    def add_cloze_deletion(self, motif_uuid: str, mask_tuples: list) -> ClozeDeletion:
+        cloze_deletion = ClozeDeletion(motif_uuid=motif_uuid, mask_tuples=mask_tuples)
+        self.session.add(cloze_deletion)
+        self.session.flush()
+        return cloze_deletion
+
+    def update_cloze_deletion(
+        self, cloze_deletion_uuid: str, mask_tuples: list
+    ) -> ClozeDeletion:
+        cloze_deletion = self.get_cloze_deletion(cloze_deletion_uuid)
+        cloze_deletion.mask_tuples = mask_tuples
+        self.session.flush()
+        return cloze_deletion
+
+    def delete_cloze_deletion(self, uuid: str) -> None:
+        cloze_deletion = self.get_cloze_deletion(uuid)
+        if cloze_deletion:
+            self.session.delete(cloze_deletion)
+            self.session.flush()

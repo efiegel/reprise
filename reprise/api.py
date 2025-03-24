@@ -2,7 +2,11 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from reprise.db import database_session
-from reprise.repository import CitationRepository, MotifRepository
+from reprise.repository import (
+    CitationRepository,
+    ClozeDeletionRepository,
+    MotifRepository,
+)
 from reprise.service import Service
 
 app = Flask(__name__)
@@ -25,6 +29,12 @@ def motifs():
                     "content": motif.content,
                     "created_at": motif.created_at.isoformat(),
                     "citation": motif.citation.title if motif.citation else None,
+                    "cloze_deletions": [
+                        {"uuid": cd.uuid, "mask_tuples": cd.mask_tuples}
+                        for cd in motif.cloze_deletions
+                    ]
+                    if motif.cloze_deletions
+                    else None,
                 }
                 for motif in motifs
             ]
@@ -47,6 +57,12 @@ def motifs():
                     "uuid": motif.uuid,
                     "content": motif.content,
                     "citation": motif.citation.title if motif.citation else None,
+                    "cloze_deletions": [
+                        {"uuid": cd.uuid, "mask_tuples": cd.mask_tuples}
+                        for cd in motif.cloze_deletions
+                    ]
+                    if motif.cloze_deletions
+                    else None,
                     "created_at": motif.created_at.isoformat(),
                 }
             )
@@ -77,6 +93,12 @@ def update_or_delete_motif(uuid):
                     "uuid": motif.uuid,
                     "content": motif.content,
                     "citation": motif.citation.title if motif.citation else None,
+                    "cloze_deletions": [
+                        {"uuid": cd.uuid, "mask_tuples": cd.mask_tuples}
+                        for cd in motif.cloze_deletions
+                    ]
+                    if motif.cloze_deletions
+                    else None,
                     "created_at": motif.created_at.isoformat(),
                 }
             )
@@ -121,14 +143,65 @@ def create_citation():
 def reprise():
     with database_session() as session:
         service = Service(session)
-        reprised_motifs = service.reprise_motifs()
-        motifs_list = [
+        reprisals = service.reprise()
+        reprisals_list = [
             {
-                "uuid": motif.uuid,
-                "content": motif.content,
-                "created_at": motif.created_at.isoformat(),
-                "citation": motif.citation.title if motif.citation else None,
+                "uuid": reprisal.motif.uuid,  # motif uuid
+                "content": reprisal.motif.content,
+                "cloze_deletions": [
+                    {
+                        "uuid": reprisal.cloze_deletion.uuid,
+                        "mask_tuples": reprisal.cloze_deletion.mask_tuples,
+                    }
+                    if reprisal.cloze_deletion
+                    else None
+                ]
+                if reprisal.cloze_deletion
+                else None,
+                "created_at": reprisal.motif.created_at.isoformat(),
+                "citation": reprisal.motif.citation.title
+                if reprisal.motif.citation
+                else None,
             }
-            for motif in reprised_motifs
+            for reprisal in reprisals
         ]
-        return jsonify(motifs_list)
+        return jsonify(reprisals_list)
+
+
+@app.route("/cloze_deletions", methods=["POST", "PUT"])
+def cloze_deletions():
+    data = request.get_json()
+    with database_session() as session:
+        repository = ClozeDeletionRepository(session)
+
+        if request.method == "POST":
+            motif_uuid = data.get("motif_uuid")
+            mask_tuples = data.get("mask_tuples")
+            cloze_deletion = repository.add_cloze_deletion(motif_uuid, mask_tuples)
+            return jsonify(
+                {
+                    "uuid": cloze_deletion.uuid,
+                    "mask_tuples": cloze_deletion.mask_tuples,
+                }
+            )
+
+        if request.method == "PUT":
+            cloze_deletion_uuid = data.get("uuid")
+            mask_tuples = data.get("mask_tuples")
+            cloze_deletion = repository.update_cloze_deletion(
+                cloze_deletion_uuid, mask_tuples
+            )
+            return jsonify(
+                {
+                    "uuid": cloze_deletion.uuid,
+                    "mask_tuples": cloze_deletion.mask_tuples,
+                }
+            )
+
+
+@app.route("/cloze_deletions/<uuid>", methods=["DELETE"])
+def delete_cloze_deletion(uuid):
+    with database_session() as session:
+        repository = ClozeDeletionRepository(session)
+        repository.delete_cloze_deletion(uuid)
+        return jsonify({"message": "Cloze deletion deleted"})

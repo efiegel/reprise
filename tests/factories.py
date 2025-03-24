@@ -1,7 +1,7 @@
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
 
-from reprise.db import Citation, Motif
+from reprise.db import Citation, ClozeDeletion, Motif
 
 
 def motif_factory(session):
@@ -32,3 +32,19 @@ def citation_factory(session):
         created_at = factory.Faker("date_time")
 
     return _CitationFactory
+
+
+def cloze_deletion_factory(session):
+    class _ClozeDeletionFactory(SQLAlchemyModelFactory):
+        class Meta:
+            model = ClozeDeletion
+            sqlalchemy_session = session
+            sqlalchemy_session_persistence = "commit"
+
+        uuid = factory.Faker("uuid4")
+        created_at = factory.Faker("date_time")
+        mask_tuples = [(0, 1)]  # not a sensible mask, just a populated one
+
+        motif = factory.SubFactory(motif_factory(session))
+
+    return _ClozeDeletionFactory

@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import Column, DateTime, String, Text, create_engine
+from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy.schema import ForeignKey
 
@@ -34,6 +35,7 @@ class Motif(Base):
     citation_uuid = Column(String(36), ForeignKey("citation.uuid"), nullable=True)
 
     citation = relationship("Citation", backref="motifs")
+    cloze_deletions = relationship("ClozeDeletion", back_populates="motif")
 
 
 class Citation(Base):
@@ -50,6 +52,35 @@ class Reprisal(Base):
     uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     motif_uuid = Column(String(36), ForeignKey("motif.uuid"), nullable=False)
     set_uuid = Column(String(36), nullable=False)
+    cloze_deletion_uuid = Column(
+        String(36), ForeignKey("cloze_deletion.uuid"), nullable=True
+    )
     created_at = Column(DateTime, default=datetime.now, nullable=False)
 
     motif = relationship("Motif", backref="reprisals")
+    cloze_deletion = relationship("ClozeDeletion", backref="reprisals")
+
+
+class ClozeDeletion(Base):
+    __tablename__ = "cloze_deletion"
+
+    uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    motif_uuid = Column(String(36), ForeignKey("motif.uuid"), nullable=False)
+    mask_tuples = Column(JSON, nullable=False)  # stores a list of (start, end) tuples
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+
+    motif = relationship("Motif", back_populates="cloze_deletions")
+
+    def masked_motif(self, mask: str = "*") -> str:
+        motif_content = self.motif.content
+        n_removed_characters = 0
+        for start, end in self.mask_tuples:
+            start -= n_removed_characters
+            end -= n_removed_characters
+
+            motif_content = motif_content[:start] + mask + motif_content[end + 1 :]
+            n_removed_characters += end - start + 1 - len(mask)
+        return motif_content
+
+    def masked_words(self) -> list[str]:
+        return [self.motif.content[start : end + 1] for start, end in self.mask_tuples]

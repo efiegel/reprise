@@ -2,8 +2,13 @@ from uuid import uuid4
 
 import pytest
 
-from reprise.repository import CitationRepository, MotifRepository, ReprisalRepository
-from tests.factories import citation_factory, motif_factory
+from reprise.repository import (
+    CitationRepository,
+    ClozeDeletionRepository,
+    MotifRepository,
+    ReprisalRepository,
+)
+from tests.factories import citation_factory, cloze_deletion_factory, motif_factory
 
 
 class TestMotifRepository:
@@ -72,6 +77,13 @@ class TestMotifRepository:
         motif_factory(session=session).create_batch(10)
         assert repository.get_motifs_count() == 10
 
+    def test_get_motifs_with_cloze_deletions(self, session, repository):
+        motif_with_cd = motif_factory(session=session).create()
+        cloze_deletion_factory(session=session).create(motif=motif_with_cd)
+
+        motif_factory(session=session).create()  # motif without cloze deletion
+        assert len(repository.get_motifs_with_cloze_deletions()) == 1
+
 
 class TestCitationRepository:
     @pytest.fixture
@@ -114,3 +126,75 @@ class TestReprisalRepository:
         assert reprisal.created_at is not None
         assert reprisal.set_uuid == set_uuid
         assert reprisal.motif == motif
+
+    def test_reprise_with_cloze_deletion(self, repository, session):
+        motif = motif_factory(session=session).create(content="the sky is blue")
+        cloze_deletion = cloze_deletion_factory(session=session).create(
+            motif=motif, mask_tuples=[(11, 14)]
+        )
+
+        set_uuid = str(uuid4())
+        reprisal = repository.add_reprisal(motif.uuid, set_uuid, cloze_deletion.uuid)
+        assert reprisal.cloze_deletion == cloze_deletion
+        assert reprisal.motif == motif
+
+
+class TestClozeDeletionRepository:
+    @pytest.fixture
+    def repository(self, session):
+        return ClozeDeletionRepository(session)
+
+    def test_add_cloze_deletion(self, repository, session):
+        motif_content = "the sky is blue"
+        motif = motif_factory(session=session).create(content=motif_content)
+
+        cloze_deletion = repository.add_cloze_deletion(motif.uuid, [(11, 14)])
+        assert cloze_deletion.uuid is not None
+        assert cloze_deletion.created_at is not None
+        assert cloze_deletion.mask_tuples == [(11, 14)]
+        assert cloze_deletion.motif == motif
+        assert motif.cloze_deletions == [cloze_deletion]
+
+    def test_get_cloze_deletion(self, repository, session):
+        motif = motif_factory(session=session).create(content="the sky is blue")
+        cloze_deletion = repository.add_cloze_deletion(motif.uuid, [(11, 14)])
+
+        fetched_cloze_deletion = repository.get_cloze_deletion(cloze_deletion.uuid)
+        assert fetched_cloze_deletion == cloze_deletion
+        assert fetched_cloze_deletion.mask_tuples == [(11, 14)]
+        assert fetched_cloze_deletion.motif == motif
+
+    def test_update_cloze_deletion(self, repository, session):
+        motif = motif_factory(session=session).create(content="the sky is blue")
+        cloze_deletion = repository.add_cloze_deletion(motif.uuid, [(11, 14)])
+
+        updated_cloze_deletion = repository.update_cloze_deletion(
+            cloze_deletion.uuid, [(4, 6), (11, 14)]
+        )
+        assert updated_cloze_deletion.mask_tuples == [(4, 6), (11, 14)]
+        assert updated_cloze_deletion.motif == motif
+
+    def test_delete_cloze_deletion(self, repository, session):
+        motif = motif_factory(session=session).create(content="the sky is blue")
+        cloze_deletion = repository.add_cloze_deletion(motif.uuid, [(11, 14)])
+
+        repository.delete_cloze_deletion(cloze_deletion.uuid)
+        assert repository.get_cloze_deletion(cloze_deletion.uuid) is None
+
+    def test_mask(self, repository, session):
+        motif_content = "the sky is blue"
+        motif = motif_factory(session=session).create(content=motif_content)
+
+        cd1 = repository.add_cloze_deletion(motif.uuid, [(11, 14)])
+        cd2 = repository.add_cloze_deletion(motif.uuid, [(4, 6), (11, 14)])
+        assert cd1.masked_motif() == "the sky is *"
+        assert cd2.masked_motif("___") == "the ___ is ___"
+
+    def test_masked_words(self, repository, session):
+        motif_content = "the sky is blue"
+        motif = motif_factory(session=session).create(content=motif_content)
+
+        cd1 = repository.add_cloze_deletion(motif.uuid, [(11, 14)])
+        cd2 = repository.add_cloze_deletion(motif.uuid, [(4, 6), (11, 14)])
+        assert cd1.masked_words() == ["blue"]
+        assert cd2.masked_words() == ["sky", "blue"]
