@@ -1,5 +1,8 @@
+from typing import List, Optional, Tuple
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from pydantic import BaseModel, ValidationError
 
 from reprise.db import database_session
 from reprise.repository import (
@@ -8,6 +11,59 @@ from reprise.repository import (
     MotifRepository,
 )
 from reprise.service import Service
+
+
+# Pydantic schemas for request validation
+class CitationCreate(BaseModel):
+    title: str
+
+
+class CitationResponse(BaseModel):
+    uuid: str
+    title: str
+    created_at: Optional[str] = None
+
+
+class ClozeDeletionCreate(BaseModel):
+    motif_uuid: str
+    mask_tuples: List[Tuple[int, int]]
+
+
+class ClozeDeletionUpdate(BaseModel):
+    uuid: str
+    mask_tuples: List[Tuple[int, int]]
+
+
+class ClozeDeletionResponse(BaseModel):
+    uuid: str
+    mask_tuples: List[Tuple[int, int]]
+
+
+class MotifCreate(BaseModel):
+    content: str
+    citation: Optional[str] = None
+
+
+class MotifUpdate(BaseModel):
+    content: str
+    citation: Optional[str] = None
+
+
+class MotifResponse(BaseModel):
+    uuid: str
+    content: str
+    created_at: str
+    citation: Optional[str] = None
+    cloze_deletions: Optional[List[ClozeDeletionResponse]] = None
+
+
+# Helper function for handling validation errors
+def validate_request_data(model_class, data):
+    try:
+        return model_class(**data)
+    except ValidationError as e:
+        return {"errors": e.errors()}, 400
+
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -24,84 +80,89 @@ def motifs():
             total_count = repository.get_motifs_count()
 
             motifs_list = [
-                {
-                    "uuid": motif.uuid,
-                    "content": motif.content,
-                    "created_at": motif.created_at.isoformat(),
-                    "citation": motif.citation.title if motif.citation else None,
-                    "cloze_deletions": [
-                        {"uuid": cd.uuid, "mask_tuples": cd.mask_tuples}
+                MotifResponse(
+                    uuid=motif.uuid,
+                    content=motif.content,
+                    created_at=motif.created_at.isoformat(),
+                    citation=motif.citation.title if motif.citation else None,
+                    cloze_deletions=[
+                        ClozeDeletionResponse(uuid=cd.uuid, mask_tuples=cd.mask_tuples)
                         for cd in motif.cloze_deletions
                     ]
                     if motif.cloze_deletions
                     else None,
-                }
+                ).dict()
                 for motif in motifs
             ]
             return jsonify({"motifs": motifs_list, "total_count": total_count})
 
     if request.method == "POST":
-        data = request.get_json()
+        validated_data = validate_request_data(MotifCreate, request.get_json())
+        if isinstance(validated_data, tuple):  # Error response
+            return jsonify(validated_data[0]), validated_data[1]
+
+        data = validated_data
         with database_session() as session:
             repository = MotifRepository(session)
-            motif = repository.add_motif(data.get("content"))
-            citation_title = data.get("citation")
-            if citation_title:
+            motif = repository.add_motif(data.content)
+            if data.citation:
                 citation_repository = CitationRepository(session)
-                citation = citation_repository.get_citation_by_title(citation_title)
+                citation = citation_repository.get_citation_by_title(data.citation)
                 if not citation:
-                    citation = citation_repository.add_citation(citation_title)
+                    citation = citation_repository.add_citation(data.citation)
                 motif = repository.add_citation(motif.uuid, citation)
-            return jsonify(
-                {
-                    "uuid": motif.uuid,
-                    "content": motif.content,
-                    "citation": motif.citation.title if motif.citation else None,
-                    "cloze_deletions": [
-                        {"uuid": cd.uuid, "mask_tuples": cd.mask_tuples}
-                        for cd in motif.cloze_deletions
-                    ]
-                    if motif.cloze_deletions
-                    else None,
-                    "created_at": motif.created_at.isoformat(),
-                }
+
+            response = MotifResponse(
+                uuid=motif.uuid,
+                content=motif.content,
+                citation=motif.citation.title if motif.citation else None,
+                cloze_deletions=[
+                    ClozeDeletionResponse(uuid=cd.uuid, mask_tuples=cd.mask_tuples)
+                    for cd in motif.cloze_deletions
+                ]
+                if motif.cloze_deletions
+                else None,
+                created_at=motif.created_at.isoformat(),
             )
+            return jsonify(response.dict())
 
 
 @app.route("/motifs/<uuid>", methods=["PUT", "DELETE"])
 def update_or_delete_motif(uuid):
     if request.method == "PUT":
-        data = request.get_json()
+        validated_data = validate_request_data(MotifUpdate, request.get_json())
+        if isinstance(validated_data, tuple):  # Error response
+            return jsonify(validated_data[0]), validated_data[1]
+
+        data = validated_data
         with database_session() as session:
-            citation_title = data.get("citation")
-            if citation_title:
+            if data.citation:
                 citation_repository = CitationRepository(session)
-                citation = citation_repository.get_citation_by_title(citation_title)
+                citation = citation_repository.get_citation_by_title(data.citation)
                 if not citation:
                     return jsonify(
-                        {"error": f"Citation {citation_title} not found"}
+                        {"error": f"Citation {data.citation} not found"}
                     ), 404
 
             repository = MotifRepository(session)
-            motif = repository.update_motif_content(uuid, data["content"])
+            motif = repository.update_motif_content(uuid, data.content)
 
-            if citation_title:
+            if data.citation:
                 motif = repository.add_citation(motif.uuid, citation)
 
-            return jsonify(
-                {
-                    "uuid": motif.uuid,
-                    "content": motif.content,
-                    "citation": motif.citation.title if motif.citation else None,
-                    "cloze_deletions": [
-                        {"uuid": cd.uuid, "mask_tuples": cd.mask_tuples}
-                        for cd in motif.cloze_deletions
-                    ]
-                    if motif.cloze_deletions
-                    else None,
-                    "created_at": motif.created_at.isoformat(),
-                }
+            response = MotifResponse(
+                uuid=motif.uuid,
+                content=motif.content,
+                citation=motif.citation.title if motif.citation else None,
+                cloze_deletions=[
+                    ClozeDeletionResponse(uuid=cd.uuid, mask_tuples=cd.mask_tuples)
+                    for cd in motif.cloze_deletions
+                ]
+                if motif.cloze_deletions
+                else None,
+                created_at=motif.created_at.isoformat(),
             )
+            return jsonify(response.dict())
 
     if request.method == "DELETE":
         with database_session() as session:
@@ -117,26 +178,29 @@ def create_citation():
             repository = CitationRepository(session)
             citations = repository.get_citations()
             citations_list = [
-                {
-                    "uuid": citation.uuid,
-                    "title": citation.title,
-                    "created_at": citation.created_at.isoformat(),
-                }
+                CitationResponse(
+                    uuid=citation.uuid,
+                    title=citation.title,
+                    created_at=citation.created_at.isoformat(),
+                ).dict()
                 for citation in citations
             ]
             return jsonify(citations_list)
 
     if request.method == "POST":
-        data = request.get_json()
+        validated_data = validate_request_data(CitationCreate, request.get_json())
+        if isinstance(validated_data, tuple):  # Error response
+            return jsonify(validated_data[0]), validated_data[1]
+
+        data = validated_data
         with database_session() as session:
             repository = CitationRepository(session)
-            citation = repository.add_citation(data.get("title"))
-            return jsonify(
-                {
-                    "uuid": citation.uuid,
-                    "title": citation.title,
-                }
+            citation = repository.add_citation(data.title)
+            response = CitationResponse(
+                uuid=citation.uuid,
+                title=citation.title,
             )
+            return jsonify(response.dict())
 
 
 @app.route("/reprise", methods=["POST"])
@@ -145,24 +209,22 @@ def reprise():
         service = Service(session)
         reprisals = service.reprise()
         reprisals_list = [
-            {
-                "uuid": reprisal.motif.uuid,  # motif uuid
-                "content": reprisal.motif.content,
-                "cloze_deletions": [
-                    {
-                        "uuid": reprisal.cloze_deletion.uuid,
-                        "mask_tuples": reprisal.cloze_deletion.mask_tuples,
-                    }
-                    if reprisal.cloze_deletion
-                    else None
+            MotifResponse(
+                uuid=reprisal.motif.uuid,
+                content=reprisal.motif.content,
+                cloze_deletions=[
+                    ClozeDeletionResponse(
+                        uuid=reprisal.cloze_deletion.uuid,
+                        mask_tuples=reprisal.cloze_deletion.mask_tuples,
+                    )
                 ]
                 if reprisal.cloze_deletion
                 else None,
-                "created_at": reprisal.motif.created_at.isoformat(),
-                "citation": reprisal.motif.citation.title
+                created_at=reprisal.motif.created_at.isoformat(),
+                citation=reprisal.motif.citation.title
                 if reprisal.motif.citation
                 else None,
-            }
+            ).dict()
             for reprisal in reprisals
         ]
         return jsonify(reprisals_list)
@@ -170,33 +232,39 @@ def reprise():
 
 @app.route("/cloze_deletions", methods=["POST", "PUT"])
 def cloze_deletions():
-    data = request.get_json()
-    with database_session() as session:
-        repository = ClozeDeletionRepository(session)
+    if request.method == "POST":
+        validated_data = validate_request_data(ClozeDeletionCreate, request.get_json())
+        if isinstance(validated_data, tuple):  # Error response
+            return jsonify(validated_data[0]), validated_data[1]
 
-        if request.method == "POST":
-            motif_uuid = data.get("motif_uuid")
-            mask_tuples = data.get("mask_tuples")
-            cloze_deletion = repository.add_cloze_deletion(motif_uuid, mask_tuples)
-            return jsonify(
-                {
-                    "uuid": cloze_deletion.uuid,
-                    "mask_tuples": cloze_deletion.mask_tuples,
-                }
+        data = validated_data
+        with database_session() as session:
+            repository = ClozeDeletionRepository(session)
+            cloze_deletion = repository.add_cloze_deletion(
+                data.motif_uuid, data.mask_tuples
             )
+            response = ClozeDeletionResponse(
+                uuid=cloze_deletion.uuid,
+                mask_tuples=cloze_deletion.mask_tuples,
+            )
+            return jsonify(response.dict())
 
-        if request.method == "PUT":
-            cloze_deletion_uuid = data.get("uuid")
-            mask_tuples = data.get("mask_tuples")
+    if request.method == "PUT":
+        validated_data = validate_request_data(ClozeDeletionUpdate, request.get_json())
+        if isinstance(validated_data, tuple):  # Error response
+            return jsonify(validated_data[0]), validated_data[1]
+
+        data = validated_data
+        with database_session() as session:
+            repository = ClozeDeletionRepository(session)
             cloze_deletion = repository.update_cloze_deletion(
-                cloze_deletion_uuid, mask_tuples
+                data.uuid, data.mask_tuples
             )
-            return jsonify(
-                {
-                    "uuid": cloze_deletion.uuid,
-                    "mask_tuples": cloze_deletion.mask_tuples,
-                }
+            response = ClozeDeletionResponse(
+                uuid=cloze_deletion.uuid,
+                mask_tuples=cloze_deletion.mask_tuples,
             )
+            return jsonify(response.dict())
 
 
 @app.route("/cloze_deletions/<uuid>", methods=["DELETE"])
