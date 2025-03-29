@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from flask import Flask, jsonify
 from flask_cors import CORS
@@ -63,6 +63,23 @@ class PaginationParams(BaseModel):
     page_size: int = 10
 
 
+class MotifListResponse(BaseModel):
+    motifs: List[Dict[str, Any]]
+    total_count: int
+
+
+class CitationListResponse(BaseModel):
+    citations: List[CitationResponse]
+
+
+class DeleteResponse(BaseModel):
+    message: str
+
+
+class ErrorResponse(BaseModel):
+    error: str
+
+
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
@@ -77,7 +94,7 @@ def handle_bad_request(e):
 
 @app.route("/motifs", methods=["GET"])
 @validate(query=PaginationParams)
-def get_motifs(query: PaginationParams):
+def get_motifs(query: PaginationParams) -> Dict[str, Any]:
     with database_session() as session:
         repository = MotifRepository(session)
         motifs = repository.get_motifs_paginated(query.page, query.page_size)
@@ -98,12 +115,14 @@ def get_motifs(query: PaginationParams):
             ).model_dump()
             for motif in motifs
         ]
-        return {"motifs": motifs_list, "total_count": total_count}
+        return MotifListResponse(
+            motifs=motifs_list, total_count=total_count
+        ).model_dump()
 
 
 @app.route("/motifs", methods=["POST"])
 @validate(body=MotifCreate)
-def create_motif(body: MotifCreate):
+def create_motif(body: MotifCreate) -> Dict[str, Any]:
     with database_session() as session:
         repository = MotifRepository(session)
         motif = repository.add_motif(body.content)
@@ -131,13 +150,15 @@ def create_motif(body: MotifCreate):
 
 @app.route("/motifs/<uuid>", methods=["PUT"])
 @validate(body=MotifUpdate)
-def update_motif(uuid: str, body: MotifUpdate):
+def update_motif(uuid: str, body: MotifUpdate) -> Dict[str, Any]:
     with database_session() as session:
         if body.citation:
             citation_repository = CitationRepository(session)
             citation = citation_repository.get_citation_by_title(body.citation)
             if not citation:
-                return {"error": f"Citation {body.citation} not found"}, 404
+                return ErrorResponse(
+                    error=f"Citation {body.citation} not found"
+                ).model_dump(), 404
 
         repository = MotifRepository(session)
         motif = repository.update_motif_content(uuid, body.content)
@@ -161,15 +182,15 @@ def update_motif(uuid: str, body: MotifUpdate):
 
 
 @app.route("/motifs/<uuid>", methods=["DELETE"])
-def delete_motif(uuid):
+def delete_motif(uuid: str) -> Dict[str, str]:
     with database_session() as session:
         repository = MotifRepository(session)
         repository.delete_motif(uuid)
-    return {"message": "Motif deleted"}
+    return DeleteResponse(message="Motif deleted").model_dump()
 
 
 @app.route("/citations", methods=["GET"])
-def get_citations():
+def get_citations() -> List[Dict[str, Any]]:
     with database_session() as session:
         repository = CitationRepository(session)
         citations = repository.get_citations()
@@ -186,7 +207,7 @@ def get_citations():
 
 @app.route("/citations", methods=["POST"])
 @validate(body=CitationCreate)
-def create_citation(body: CitationCreate):
+def create_citation(body: CitationCreate) -> Dict[str, Any]:
     with database_session() as session:
         repository = CitationRepository(session)
         citation = repository.add_citation(body.title)
@@ -198,7 +219,7 @@ def create_citation(body: CitationCreate):
 
 
 @app.route("/reprise", methods=["POST"])
-def reprise():
+def reprise() -> List[Dict[str, Any]]:
     with database_session() as session:
         service = Service(session)
         reprisals = service.reprise()
@@ -226,7 +247,7 @@ def reprise():
 
 @app.route("/cloze_deletions", methods=["POST"])
 @validate(body=ClozeDeletionCreate)
-def create_cloze_deletion(body: ClozeDeletionCreate):
+def create_cloze_deletion(body: ClozeDeletionCreate) -> Dict[str, Any]:
     with database_session() as session:
         repository = ClozeDeletionRepository(session)
         cloze_deletion = repository.add_cloze_deletion(
@@ -241,7 +262,7 @@ def create_cloze_deletion(body: ClozeDeletionCreate):
 
 @app.route("/cloze_deletions", methods=["PUT"])
 @validate(body=ClozeDeletionUpdate)
-def update_cloze_deletion(body: ClozeDeletionUpdate):
+def update_cloze_deletion(body: ClozeDeletionUpdate) -> Dict[str, Any]:
     with database_session() as session:
         repository = ClozeDeletionRepository(session)
         cloze_deletion = repository.update_cloze_deletion(body.uuid, body.mask_tuples)
@@ -253,8 +274,8 @@ def update_cloze_deletion(body: ClozeDeletionUpdate):
 
 
 @app.route("/cloze_deletions/<uuid>", methods=["DELETE"])
-def delete_cloze_deletion(uuid):
+def delete_cloze_deletion(uuid: str) -> Dict[str, str]:
     with database_session() as session:
         repository = ClozeDeletionRepository(session)
         repository.delete_cloze_deletion(uuid)
-        return {"message": "Cloze deletion deleted"}
+        return DeleteResponse(message="Cloze deletion deleted").model_dump()
