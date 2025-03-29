@@ -14,6 +14,31 @@ class TestAPI:
     def citation(self, session):
         return citation_factory(session=session).create()
 
+    @pytest.fixture
+    def cloze_deletion(self, session, motif):
+        return cloze_deletion_factory(session=session).create(motif=motif)
+
+    # Common test data fixtures
+    @pytest.fixture
+    def motif_data(self):
+        return {"content": "Test motif content"}
+
+    @pytest.fixture
+    def motif_with_citation_data(self):
+        return {"content": "Test motif content", "citation": "Test citation"}
+
+    @pytest.fixture
+    def citation_data(self):
+        return {"title": "Test citation title"}
+
+    @pytest.fixture
+    def cloze_deletion_data(self, motif):
+        return {"motif_uuid": motif.uuid, "mask_tuples": [[0, 2], [4, 6]]}
+
+    @pytest.fixture
+    def cloze_update_data(self, cloze_deletion):
+        return {"uuid": cloze_deletion.uuid, "mask_tuples": [[1, 3], [5, 7]]}
+
     def test_get_motifs(self, session, client):
         motif = motif_factory(session=session).create()
         cloze_deletion = cloze_deletion_factory(session=session).create(motif=motif)
@@ -28,55 +53,53 @@ class TestAPI:
             {"uuid": cloze_deletion.uuid, "mask_tuples": cloze_deletion.mask_tuples}
         ]
 
-    def test_add_motif_without_citation(self, client):
+    def test_add_motif_without_citation(self, client, motif_data):
         response = client.post(
             "/motifs",
-            data=json.dumps({"content": "New motif content"}),
+            data=json.dumps(motif_data),
             content_type="application/json",
         )
 
         data = json.loads(response.data)
         assert response.status_code == 200
-        assert data["content"] == "New motif content"
+        assert data["content"] == motif_data["content"]
         assert data["citation"] is None
 
         with database_session() as session:
             motif = session.query(Motif).filter_by(uuid=data["uuid"]).one_or_none()
-            assert motif.content == "New motif content"
+            assert motif.content == motif_data["content"]
 
-    def test_add_motif_with_citation(self, client):
+    def test_add_motif_with_citation(self, client, motif_with_citation_data):
         response = client.post(
             "/motifs",
-            data=json.dumps(
-                {"content": "New motif content", "citation": "New citation"}
-            ),
+            data=json.dumps(motif_with_citation_data),
             content_type="application/json",
         )
 
         data = json.loads(response.data)
         assert response.status_code == 200
-        assert data["content"] == "New motif content"
-        assert data["citation"] == "New citation"
+        assert data["content"] == motif_with_citation_data["content"]
+        assert data["citation"] == motif_with_citation_data["citation"]
 
         with database_session() as session:
             motif = session.query(Motif).filter_by(uuid=data["uuid"]).one_or_none()
-            assert motif.content == "New motif content"
-            assert motif.citation.title == "New citation"
+            assert motif.content == motif_with_citation_data["content"]
+            assert motif.citation.title == motif_with_citation_data["citation"]
 
-    def test_update_motif(self, client, motif):
+    def test_update_motif(self, client, motif, motif_data):
         response = client.put(
             f"/motifs/{motif.uuid}",
-            data=json.dumps({"content": "Updated content"}),
+            data=json.dumps(motif_data),
             content_type="application/json",
         )
 
         data = json.loads(response.data)
         assert response.status_code == 200
-        assert data["content"] == "Updated content"
+        assert data["content"] == motif_data["content"]
 
         with database_session() as session:
             motif = session.query(Motif).filter_by(uuid=motif.uuid).one_or_none()
-            assert motif.content == "Updated content"
+            assert motif.content == motif_data["content"]
 
     def test_update_motif_invalid_citation(self, client, motif):
         response = client.put(
@@ -100,22 +123,22 @@ class TestAPI:
         with database_session() as session:
             assert len(session.query(Motif).filter_by(uuid=motif.uuid).all()) == 0
 
-    def test_create_citation(self, client):
+    def test_create_citation(self, client, citation_data):
         response = client.post(
             "/citations",
-            data=json.dumps({"title": "New citation title"}),
+            data=json.dumps(citation_data),
             content_type="application/json",
         )
 
         data = json.loads(response.data)
         assert response.status_code == 200
-        assert data["title"] == "New citation title"
+        assert data["title"] == citation_data["title"]
 
         with database_session() as session:
             citation = (
                 session.query(Citation).filter_by(uuid=data["uuid"]).one_or_none()
             )
-            assert citation.title == "New citation title"
+            assert citation.title == citation_data["title"]
 
     def test_get_citations(self, client, citation):
         response = client.get("/citations")
@@ -183,40 +206,37 @@ class TestAPI:
         assert response.status_code == 200
         assert len(data["motifs"]) == 0
 
-    def test_add_cloze_deletion(self, client, motif):
+    def test_add_cloze_deletion(self, client, motif, cloze_deletion_data):
         response = client.post(
             "/cloze_deletions",
-            data=json.dumps(
-                {"motif_uuid": motif.uuid, "mask_tuples": [[0, 2], [4, 6]]}
-            ),
+            data=json.dumps(cloze_deletion_data),
             content_type="application/json",
         )
 
         data = json.loads(response.data)
         assert response.status_code == 200
-        assert data["mask_tuples"] == [[0, 2], [4, 6]]
+        assert data["mask_tuples"] == cloze_deletion_data["mask_tuples"]
 
         with database_session() as session:
             motif = session.query(Motif).filter_by(uuid=motif.uuid).one_or_none()
             assert len(motif.cloze_deletions) == 1
-            assert motif.cloze_deletions[0].mask_tuples == [[0, 2], [4, 6]]
+            assert (
+                motif.cloze_deletions[0].mask_tuples
+                == cloze_deletion_data["mask_tuples"]
+            )
 
-    def test_update_cloze_deletion(self, session, client, motif):
-        cloze_deletion = cloze_deletion_factory(session=session).create(
-            motif=motif, mask_tuples=[[0, 2]]
-        )
-
+    def test_update_cloze_deletion(
+        self, client, motif, cloze_deletion, cloze_update_data
+    ):
         response = client.put(
             "/cloze_deletions",
-            data=json.dumps(
-                {"uuid": cloze_deletion.uuid, "mask_tuples": [[1, 3], [5, 7]]}
-            ),
+            data=json.dumps(cloze_update_data),
             content_type="application/json",
         )
 
         data = json.loads(response.data)
         assert response.status_code == 200
-        assert data["mask_tuples"] == [[1, 3], [5, 7]]
+        assert data["mask_tuples"] == cloze_update_data["mask_tuples"]
 
         with database_session() as session:
             updated_cloze_deletion = (
@@ -225,13 +245,11 @@ class TestAPI:
                 .one_or_none()
                 .cloze_deletions[0]
             )
-            assert updated_cloze_deletion.mask_tuples == [[1, 3], [5, 7]]
+            assert (
+                updated_cloze_deletion.mask_tuples == cloze_update_data["mask_tuples"]
+            )
 
-    def test_delete_cloze_deletion(self, session, client, motif):
-        cloze_deletion = cloze_deletion_factory(session=session).create(
-            motif=motif, mask_tuples=[[0, 2]]
-        )
-
+    def test_delete_cloze_deletion(self, client, motif, cloze_deletion):
         response = client.delete(f"/cloze_deletions/{cloze_deletion.uuid}")
         assert response.status_code == 200
         assert json.loads(response.data)["message"] == "Cloze deletion deleted"
@@ -244,3 +262,102 @@ class TestAPI:
                 .cloze_deletions
                 == []
             )
+
+    # Parameterized validation tests
+    @pytest.mark.parametrize(
+        "endpoint,data,field,expected_status",
+        [
+            # Motif validation tests
+            ("/motifs", {}, "content", 400),
+            ("/motifs", {"content": 123}, "content", 400),
+            # Citation validation tests
+            ("/citations", {}, "title", 400),
+            # Cloze deletion validation tests
+            ("/cloze_deletions", {}, "motif_uuid", 400),
+            ("/cloze_deletions", {}, "mask_tuples", 400),
+            (
+                "/cloze_deletions",
+                {"motif_uuid": "uuid", "mask_tuples": "invalid"},
+                "mask_tuples",
+                400,
+            ),
+            (
+                "/cloze_deletions",
+                {"motif_uuid": "uuid", "mask_tuples": [[0], [4, 6]]},
+                "mask_tuples",
+                400,
+            ),
+            (
+                "/cloze_deletions",
+                {"motif_uuid": "uuid", "mask_tuples": [["a", "b"], [4, 6]]},
+                "mask_tuples",
+                400,
+            ),
+        ],
+    )
+    def test_validation_errors_post(
+        self, client, endpoint, data, field, expected_status
+    ):
+        """Parameterized test for validation errors on POST endpoints."""
+        response = client.post(
+            endpoint,
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        data = json.loads(response.data)
+        assert response.status_code == expected_status
+        if expected_status == 400:
+            assert "errors" in data
+            if field:
+                assert any(field in error["loc"] for error in data["errors"])
+
+    @pytest.mark.parametrize(
+        "endpoint,data,field,expected_status",
+        [
+            # Motif update validation tests
+            ("/motifs/some-uuid", {}, "content", 400),
+            ("/motifs/some-uuid", {"content": 123}, "content", 400),
+            (
+                "/motifs/some-uuid",
+                {"content": "valid", "citation": 123},
+                "citation",
+                400,
+            ),
+            # Cloze deletion update validation tests
+            ("/cloze_deletions", {}, "uuid", 400),
+            ("/cloze_deletions", {}, "mask_tuples", 400),
+            (
+                "/cloze_deletions",
+                {"uuid": "some-uuid", "mask_tuples": "invalid"},
+                "mask_tuples",
+                400,
+            ),
+        ],
+    )
+    def test_validation_errors_put(
+        self, client, endpoint, data, field, expected_status
+    ):
+        """Parameterized test for validation errors on PUT endpoints."""
+        response = client.put(
+            endpoint,
+            data=json.dumps(data),
+            content_type="application/json",
+        )
+
+        data = json.loads(response.data)
+        assert response.status_code == expected_status
+        if expected_status == 400:
+            assert "errors" in data
+            if field:
+                assert any(field in error["loc"] for error in data["errors"])
+
+    def test_malformed_json(self, client):
+        """Test error handling for malformed JSON."""
+        response = client.post(
+            "/motifs",
+            data="{invalid: json",
+            content_type="application/json",
+        )
+
+        assert response.status_code == 400

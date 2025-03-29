@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -58,7 +58,9 @@ class MotifResponse(BaseModel):
 
 
 # Helper function for handling validation errors
-def validate_request_data(model_class, data):
+def validate_request_data(
+    model_class: Type[BaseModel], data: Dict[str, Any]
+) -> Union[BaseModel, tuple]:
     try:
         return model_class(**data)
     except ValidationError as e:
@@ -67,6 +69,14 @@ def validate_request_data(model_class, data):
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+
+# Add error handler for malformed JSON
+@app.errorhandler(400)
+def handle_bad_request(e):
+    if "Failed to decode JSON object" in str(e):
+        return jsonify({"error": "Malformed JSON in request"}), 400
+    return jsonify({"error": str(e)}), 400
 
 
 @app.route("/motifs", methods=["GET", "POST"])
@@ -91,7 +101,7 @@ def motifs():
                     ]
                     if motif.cloze_deletions
                     else None,
-                ).dict()
+                ).model_dump()
                 for motif in motifs
             ]
             return jsonify({"motifs": motifs_list, "total_count": total_count})
@@ -124,7 +134,7 @@ def motifs():
                 else None,
                 created_at=motif.created_at.isoformat(),
             )
-            return jsonify(response.dict())
+            return jsonify(response.model_dump())
 
 
 @app.route("/motifs/<uuid>", methods=["PUT", "DELETE"])
@@ -162,7 +172,7 @@ def update_or_delete_motif(uuid):
                 else None,
                 created_at=motif.created_at.isoformat(),
             )
-            return jsonify(response.dict())
+            return jsonify(response.model_dump())
 
     if request.method == "DELETE":
         with database_session() as session:
@@ -182,7 +192,7 @@ def create_citation():
                     uuid=citation.uuid,
                     title=citation.title,
                     created_at=citation.created_at.isoformat(),
-                ).dict()
+                ).model_dump()
                 for citation in citations
             ]
             return jsonify(citations_list)
@@ -200,7 +210,7 @@ def create_citation():
                 uuid=citation.uuid,
                 title=citation.title,
             )
-            return jsonify(response.dict())
+            return jsonify(response.model_dump())
 
 
 @app.route("/reprise", methods=["POST"])
@@ -224,7 +234,7 @@ def reprise():
                 citation=reprisal.motif.citation.title
                 if reprisal.motif.citation
                 else None,
-            ).dict()
+            ).model_dump()
             for reprisal in reprisals
         ]
         return jsonify(reprisals_list)
@@ -247,7 +257,7 @@ def cloze_deletions():
                 uuid=cloze_deletion.uuid,
                 mask_tuples=cloze_deletion.mask_tuples,
             )
-            return jsonify(response.dict())
+            return jsonify(response.model_dump())
 
     if request.method == "PUT":
         validated_data = validate_request_data(ClozeDeletionUpdate, request.get_json())
@@ -264,7 +274,7 @@ def cloze_deletions():
                 uuid=cloze_deletion.uuid,
                 mask_tuples=cloze_deletion.mask_tuples,
             )
-            return jsonify(response.dict())
+            return jsonify(response.model_dump())
 
 
 @app.route("/cloze_deletions/<uuid>", methods=["DELETE"])
