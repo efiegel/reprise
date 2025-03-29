@@ -308,9 +308,16 @@ class TestAPI:
         data = json.loads(response.data)
         assert response.status_code == expected_status
         if expected_status == 400:
-            assert "errors" in data
+            assert "validation_error" in data
             if field:
-                assert any(field in error["loc"] for error in data["errors"])
+                # For flask-pydantic, errors are in body_params or query_params
+                if "body_params" in data["validation_error"]:
+                    errors = data["validation_error"]["body_params"]
+                elif "query_params" in data["validation_error"]:
+                    errors = data["validation_error"]["query_params"]
+                else:
+                    errors = []
+                assert any(field in error["loc"] for error in errors)
 
     @pytest.mark.parametrize(
         "endpoint,data,field,expected_status",
@@ -348,9 +355,16 @@ class TestAPI:
         data = json.loads(response.data)
         assert response.status_code == expected_status
         if expected_status == 400:
-            assert "errors" in data
+            assert "validation_error" in data
             if field:
-                assert any(field in error["loc"] for error in data["errors"])
+                # For flask-pydantic, errors are in body_params or query_params
+                if "body_params" in data["validation_error"]:
+                    errors = data["validation_error"]["body_params"]
+                elif "query_params" in data["validation_error"]:
+                    errors = data["validation_error"]["query_params"]
+                else:
+                    errors = []
+                assert any(field in error["loc"] for error in errors)
 
     def test_malformed_json(self, client):
         """Test error handling for malformed JSON."""
