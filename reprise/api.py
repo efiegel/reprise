@@ -33,8 +33,6 @@ CORS(app)  # Enable CORS for all routes
 # Add error handler for malformed JSON
 @app.errorhandler(400)
 def handle_bad_request(e):
-    if "Failed to decode JSON object" in str(e):
-        return jsonify({"error": "Malformed JSON in request"}), 400
     return jsonify({"error": str(e)}), 400
 
 
