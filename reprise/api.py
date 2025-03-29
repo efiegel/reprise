@@ -30,7 +30,6 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 
-# Add error handler for malformed JSON
 @app.errorhandler(400)
 def handle_bad_request(e):
     return jsonify({"error": str(e)}), 400
