@@ -40,27 +40,32 @@ class TestService:
 
     @patch("reprise.service.generate_cloze_deletion")
     def test_add_default_cloze_deletion(self, mock_generate, session):
-        # Mock the OpenAI API call to return a specific mask tuple
-        mock_generate.return_value = [[2, 5], [7, 10]]
+        # Mock the OpenAI API call to return a list of mask tuple sets
+        mock_generate.return_value = [[[2, 5], [7, 10]], [[12, 15]]]
 
         motif = motif_factory(session=session).create(content="Test motif content")
         assert len(motif.cloze_deletions) == 0
 
         service = Service(session)
-        cloze_deletion = service.cloze_delete_motif(motif.uuid)
+        cloze_deletions = service.cloze_delete_motif(motif.uuid)
 
         # Verify the OpenAI client was called with the motif content
-        mock_generate.assert_called_once_with(motif.content)
+        mock_generate.assert_called_once_with(motif.content, n=2)
 
         # Verify the cloze deletion was created with the mocked mask tuples
-        assert cloze_deletion is not None
-        assert cloze_deletion.mask_tuples == [[2, 5], [7, 10]]
-        assert cloze_deletion.motif_uuid == motif.uuid
+        assert len(cloze_deletions) == 2
+        assert cloze_deletions[0].mask_tuples == [[2, 5], [7, 10]]
+        assert cloze_deletions[0].motif_uuid == motif.uuid
+        assert cloze_deletions[1].mask_tuples == [[12, 15]]
+        assert cloze_deletions[1].motif_uuid == motif.uuid
 
-        # Check that the motif now has the cloze deletion
+        # Check that the motif now has both cloze deletions
         session.refresh(motif)
-        assert len(motif.cloze_deletions) == 1
-        assert motif.cloze_deletions[0].mask_tuples == [[2, 5], [7, 10]]
+        assert len(motif.cloze_deletions) == 2
+        # The order might not be guaranteed, so we'll check both possibilities
+        mask_tuples_list = [cd.mask_tuples for cd in motif.cloze_deletions]
+        assert [[2, 5], [7, 10]] in mask_tuples_list
+        assert [[12, 15]] in mask_tuples_list
 
     @patch("reprise.service.generate_cloze_deletion")
     def test_add_default_cloze_deletion_fallback(self, mock_generate, session):

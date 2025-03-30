@@ -39,7 +39,11 @@ class TestOpenAIClient:
         # Setup mock chat completions
         mock_completion = MagicMock()
         mock_completion.choices = [
-            MagicMock(message=MagicMock(content='{"words_to_mask": ["sky", "blue"]}'))
+            MagicMock(
+                message=MagicMock(
+                    content='{"cloze_deletion_sets": [["sky", "blue"], ["is"]]}'
+                )
+            )
         ]
         mock_client.chat.completions.create.return_value = mock_completion
 
@@ -47,7 +51,9 @@ class TestOpenAIClient:
         result = generate_cloze_deletion("The sky is blue")
 
         # Verify the result
-        assert result == [[4, 6], [11, 14]]
+        assert len(result) == 2
+        assert result[0] == [[4, 6], [11, 14]]
+        assert result[1] == [[8, 9]]
         mock_client.chat.completions.create.assert_called_once()
 
     @patch("reprise.openai_client.OPENAI_API_KEY", None)
@@ -72,8 +78,8 @@ class TestOpenAIClient:
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletion_missing_words_to_mask(self, mock_client):
-        # Setup mock response with missing words_to_mask key
+    def test_generate_cloze_deletion_missing_cloze_deletion_sets(self, mock_client):
+        # Setup mock response with missing cloze_deletion_sets key
         mock_completion = MagicMock()
         mock_completion.choices = [
             MagicMock(message=MagicMock(content='{"other_key": "value"}'))
@@ -83,22 +89,22 @@ class TestOpenAIClient:
         # Test the function
         with pytest.raises(ValueError) as excinfo:
             generate_cloze_deletion("The sky is blue")
-        assert "missing required 'words_to_mask' field" in str(excinfo.value)
+        assert "missing required 'cloze_deletion_sets' field" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletion_invalid_words_to_mask(self, mock_client):
-        # Setup mock response with invalid words_to_mask format
+    def test_generate_cloze_deletion_invalid_cloze_deletion_sets(self, mock_client):
+        # Setup mock response with invalid cloze_deletion_sets format
         mock_completion = MagicMock()
         mock_completion.choices = [
-            MagicMock(message=MagicMock(content='{"words_to_mask": 123}'))
+            MagicMock(message=MagicMock(content='{"cloze_deletion_sets": 123}'))
         ]
         mock_client.chat.completions.create.return_value = mock_completion
 
         # Test the function
         with pytest.raises(ValueError) as excinfo:
             generate_cloze_deletion("The sky is blue")
-        assert "Invalid words_to_mask format" in str(excinfo.value)
+        assert "Invalid cloze_deletion_sets format" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
@@ -106,7 +112,9 @@ class TestOpenAIClient:
         # Setup mock response with words that don't exist in the text
         mock_completion = MagicMock()
         mock_completion.choices = [
-            MagicMock(message=MagicMock(content='{"words_to_mask": ["red", "green"]}'))
+            MagicMock(
+                message=MagicMock(content='{"cloze_deletion_sets": [["red", "green"]]}')
+            )
         ]
         mock_client.chat.completions.create.return_value = mock_completion
 
@@ -133,7 +141,7 @@ class TestOpenAIClient:
         mock_completion = MagicMock()
         # This will pass validation but cause a TypeError when accessing word in find_word_indices
         mock_completion.choices = [
-            MagicMock(message=MagicMock(content='{"words_to_mask": ["blue"]}'))
+            MagicMock(message=MagicMock(content='{"cloze_deletion_sets": [["blue"]]}'))
         ]
         mock_client.chat.completions.create.return_value = mock_completion
 

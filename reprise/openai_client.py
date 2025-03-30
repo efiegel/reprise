@@ -56,16 +56,18 @@ def find_word_indices(text: str, words_to_mask: List[str]) -> List[List[int]]:
     return indices
 
 
-def generate_cloze_deletion(content: str) -> List[List[int]]:
+def generate_cloze_deletion(content: str, n: int = 1) -> List[List[List[int]]]:
     """
-    Use OpenAI model to generate mask tuples for a cloze deletion.
-    Returns a list of [start, end] position pairs that define what should be masked.
+    Use OpenAI model to generate multiple cloze deletion sets.
+    Returns a list of cloze deletion sets, each containing a list of [start, end]
+    position pairs that define what should be masked.
 
     Args:
-        content: The text content to generate a cloze deletion for
+        content: The text content to generate cloze deletions for
+        n: The number of different cloze deletion sets to generate (default: 1)
 
     Returns:
-        List of [start, end] positions representing where to mask
+        List of lists of [start, end] positions, where each inner list represents a cloze deletion set
 
     Raises:
         ValueError: If the OpenAI API key is not set
@@ -81,33 +83,33 @@ def generate_cloze_deletion(content: str) -> List[List[int]]:
         messages=[
             {
                 "role": "system",
-                "content": """You are a helpful assistant that creates cloze deletions for learning purposes.
-                Given a text, identify the single most important word or phrase to mask out, as if you
-                were to learn the text with flashcards and wanted to single out the important meaning.
+                "content": f"""You are a helpful assistant that creates cloze deletions for learning purposes.
+                Given a text, create {n} different cloze deletion sets where each set masks different important
+                words or phrases to test different aspects of the text.
                 
-                Return your response as a JSON object with a 'words_to_mask' key containing an array of strings.
-                Each string is a word or short phrase that should be masked in the text.
+                Return your response as a JSON object with a 'cloze_deletion_sets' key containing an array of arrays.
+                Each inner array contains strings representing the words or phrases to mask for that cloze deletion set.
                 
-                For example, if the input is 'The sky is blue' and you want to mask 'blue', return:
-                { "words_to_mask": ["blue"] }
+                For example, if asked to create 2 cloze deletion sets for "The sky is blue and the grass is green":
+                {{
+                  "cloze_deletion_sets": [
+                    ["blue", "green"],  // First deletion set masks colors
+                    ["sky", "grass"]    // Second deletion set masks objects
+                  ]
+                }}
                 
-                You can mask multiple words or phrases, but only do so if it doesn't over-mask the text.
-                For example, if the input it 'The sky is blue' you should not mask 'sky' and 'blue' because
-                that would make reconstruction of the text unrealistic (all context is gone).
-                
-                If you want to mask multiple words, include multiple words like:
-                { "words_to_mask": ["word_1", "word_2"] }
-
-                If you mask a phrase, include the phrase as a single string:
-                { "words_to_mask": ["Eiffel Tower"] }
-                
+                Each set should focus on masking different aspects of the content.
                 Be precise with your words to ensure they can be found exactly in the text.
+                Provide exactly {n} different cloze deletion sets, unless the text is too short.
                 """,
             },
-            {"role": "user", "content": f"Create a cloze deletion for: '{content}'"},
+            {
+                "role": "user",
+                "content": f"Create {n} different cloze deletion sets for: '{content}'",
+            },
         ],
         temperature=0.7,
-        max_tokens=150,
+        max_tokens=250,
         response_format={"type": "json_object"},
     )
 
@@ -116,28 +118,45 @@ def generate_cloze_deletion(content: str) -> List[List[int]]:
     try:
         # Parse the JSON response
         mask_data = json.loads(result)
-        if "words_to_mask" not in mask_data:
-            logger.error(f"Missing words_to_mask in response: {result}")
-            raise ValueError("OpenAI response missing required 'words_to_mask' field")
+        if "cloze_deletion_sets" not in mask_data:
+            logger.error(f"Missing cloze_deletion_sets in response: {result}")
+            raise ValueError(
+                "OpenAI response missing required 'cloze_deletion_sets' field"
+            )
 
-        words_to_mask = mask_data["words_to_mask"]
+        cloze_deletion_sets = mask_data["cloze_deletion_sets"]
 
-        # Validate the words_to_mask
-        if not isinstance(words_to_mask, list) or not all(
-            isinstance(w, str) for w in words_to_mask
+        # Validate the cloze_deletion_sets
+        if not isinstance(cloze_deletion_sets, list) or not all(
+            isinstance(set_items, list) and all(isinstance(w, str) for w in set_items)
+            for set_items in cloze_deletion_sets
         ):
-            logger.error(f"Invalid words_to_mask format from OpenAI: {words_to_mask}")
-            raise ValueError(f"Invalid words_to_mask format: {words_to_mask}")
+            logger.error(
+                f"Invalid cloze_deletion_sets format from OpenAI: {cloze_deletion_sets}"
+            )
+            raise ValueError(
+                f"Invalid cloze_deletion_sets format: {cloze_deletion_sets}"
+            )
 
-        # Find indices of words to mask
-        valid_tuples = find_word_indices(content, words_to_mask)
+        # Find indices for each set of words to mask
+        all_mask_tuples = []
+        for words_set in cloze_deletion_sets:
+            # Find indices of words to mask for this set
+            mask_tuples = find_word_indices(content, words_set)
 
-        # If no valid tuples, raise an exception
-        if not valid_tuples:
-            logger.error("No valid mask tuples found")
+            # If no valid tuples for this set, log a warning but continue
+            if not mask_tuples:
+                logger.warning(f"No valid mask tuples found for words: {words_set}")
+                continue
+
+            all_mask_tuples.append(mask_tuples)
+
+        # If no valid tuples found in any sets, raise an exception
+        if not all_mask_tuples:
+            logger.error("No valid mask tuples found in any cloze deletion set")
             raise ValueError("No valid mask tuples found in the content range")
 
-        return valid_tuples
+        return all_mask_tuples
 
     except json.JSONDecodeError as e:
         logger.error(f"Error parsing OpenAI response: {e}. Response: {result}")

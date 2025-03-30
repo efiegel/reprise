@@ -48,10 +48,25 @@ class Service:
 
         return reprisals
 
-    def cloze_delete_motif(self, motif_uuid: str):
-        motif = self.motif_repository.get_motif(motif_uuid)
-        mask_tuples = generate_cloze_deletion(motif.content)
+    def cloze_delete_motif(self, motif_uuid: str, n: int):
+        """
+        Create multiple cloze deletions for a motif.
 
-        return self.cloze_deletion_repository.add_cloze_deletion(
-            motif_uuid=motif_uuid, mask_tuples=mask_tuples
-        )
+        Args:
+            motif_uuid: The UUID of the motif to create cloze deletions for
+            n: The number of different cloze deletion sets to generate
+
+        Returns:
+            List of created ClozeDeletion objects
+        """
+        motif = self.motif_repository.get_motif(motif_uuid)
+        mask_tuples_sets = generate_cloze_deletion(motif.content, n=n)
+
+        cloze_deletions = []
+        for mask_tuples in mask_tuples_sets:
+            cloze_deletion = self.cloze_deletion_repository.add_cloze_deletion(
+                motif_uuid=motif_uuid, mask_tuples=mask_tuples
+            )
+            cloze_deletions.append(cloze_deletion)
+
+        return cloze_deletions
