@@ -85,10 +85,9 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
                 "role": "system",
                 "content": f"""You are a helpful assistant that creates cloze deletions for learning purposes.
                 Given a text, create an appropriate number of different cloze deletion sets (up to {n_max} sets) 
-                where each set masks different important words or phrases to test different aspects of the text.
-                
-                Use your judgment to determine how many sets would be appropriate based on the text length and 
-                complexity, but do not exceed {n_max} sets.
+                where each set masks different important words or phrases that are important to learn. For example,
+                think of this as making flashcards for the text. Make as many as appropriate to learn the important
+                information, but do not exceed {n_max} sets.
                 
                 Return your response as a JSON object with a 'cloze_deletion_sets' key containing an array of arrays.
                 Each inner array contains strings representing the words or phrases to mask for that cloze deletion set.
@@ -96,14 +95,17 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
                 For example, if asked to create cloze deletion sets for "The sky is blue and the grass is green":
                 {{
                   "cloze_deletion_sets": [
-                    ["blue", "green"],  // First deletion set masks colors
-                    ["sky", "grass"]    // Second deletion set masks objects
+                    ["blue", "green"],
+                    ["sky", "grass"]
                   ]
                 }}
                 
-                Each set should focus on masking different aspects of the content.
+                Thinking again of flashcards, keep in mind that the chosen words or phrases should must be such that they can
+                be reasonably inferrable if the user is shown the remaining text. For example, with the text of
+                "The sky is blue" the word "sky" would not be a good selection because many things are blue. Choose only
+                words or phrases that will make high-quality flashcards. Quality over quantity, even if we just have one flashcard.
+
                 Be precise with your words to ensure they can be found exactly in the text.
-                For very short or simple texts, you may create fewer sets if appropriate.
                 """,
             },
             {
