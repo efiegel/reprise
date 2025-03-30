@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from reprise.openai_client import generate_cloze_deletion
 
 
@@ -24,8 +26,9 @@ class TestOpenAIClient:
     @patch("reprise.openai_client.OPENAI_API_KEY", None)
     def test_generate_cloze_deletion_no_api_key(self):
         # Test when API key is not provided
-        result = generate_cloze_deletion("The sky is blue")
-        assert result == [[0, 1]]  # Default fallback
+        with pytest.raises(ValueError) as excinfo:
+            generate_cloze_deletion("The sky is blue")
+        assert "OpenAI API key is required" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
@@ -36,10 +39,9 @@ class TestOpenAIClient:
         mock_client.chat.completions.create.return_value = mock_completion
 
         # Test the function
-        result = generate_cloze_deletion("The sky is blue")
-
-        # Verify fallback to default
-        assert result == [[0, 1]]
+        with pytest.raises(ValueError) as excinfo:
+            generate_cloze_deletion("The sky is blue")
+        assert "Invalid JSON" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
@@ -52,10 +54,9 @@ class TestOpenAIClient:
         mock_client.chat.completions.create.return_value = mock_completion
 
         # Test the function
-        result = generate_cloze_deletion("The sky is blue")
-
-        # Verify fallback to default
-        assert result == [[0, 1]]
+        with pytest.raises(ValueError) as excinfo:
+            generate_cloze_deletion("The sky is blue")
+        assert "missing required 'mask_tuples' field" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
@@ -68,10 +69,9 @@ class TestOpenAIClient:
         mock_client.chat.completions.create.return_value = mock_completion
 
         # Test the function
-        result = generate_cloze_deletion("The sky is blue")
-
-        # Verify fallback to default
-        assert result == [[0, 1]]
+        with pytest.raises(ValueError) as excinfo:
+            generate_cloze_deletion("The sky is blue")
+        assert "Invalid mask_tuples format" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
@@ -84,10 +84,9 @@ class TestOpenAIClient:
         mock_client.chat.completions.create.return_value = mock_completion
 
         # Test the function with shorter text
-        result = generate_cloze_deletion("short")
-
-        # Verify fallback to default as the range is out of bounds
-        assert result == [[0, 1]]
+        with pytest.raises(ValueError) as excinfo:
+            generate_cloze_deletion("short")
+        assert "No valid mask tuples found" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
@@ -96,7 +95,6 @@ class TestOpenAIClient:
         mock_client.chat.completions.create.side_effect = Exception("API Error")
 
         # Test the function
-        result = generate_cloze_deletion("The sky is blue")
-
-        # Verify fallback to default
-        assert result == [[0, 1]]
+        with pytest.raises(Exception) as excinfo:
+            generate_cloze_deletion("The sky is blue")
+        assert "API Error" in str(excinfo.value)
