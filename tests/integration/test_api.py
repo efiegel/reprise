@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from flask import json
 
@@ -53,7 +55,11 @@ class TestAPI:
             {"uuid": cloze_deletion.uuid, "mask_tuples": cloze_deletion.mask_tuples}
         ]
 
-    def test_add_motif_without_citation(self, client, motif_data):
+    @patch("reprise.service.generate_cloze_deletion")
+    def test_add_motif_without_citation(self, mock_generate, client, motif_data):
+        # Mock the OpenAI response to return specific mask tuples
+        mock_generate.return_value = [[3, 7], [10, 14]]
+
         response = client.post(
             "/motifs",
             data=json.dumps(motif_data),
@@ -67,15 +73,21 @@ class TestAPI:
 
         assert data["cloze_deletions"] is not None
         assert len(data["cloze_deletions"]) == 1
-        assert data["cloze_deletions"][0]["mask_tuples"] == [[0, 1]]
+        assert data["cloze_deletions"][0]["mask_tuples"] == [[3, 7], [10, 14]]
 
         with database_session() as session:
             motif = session.query(Motif).filter_by(uuid=data["uuid"]).one_or_none()
             assert motif.content == motif_data["content"]
             assert len(motif.cloze_deletions) == 1
-            assert motif.cloze_deletions[0].mask_tuples == [[0, 1]]
+            assert motif.cloze_deletions[0].mask_tuples == [[3, 7], [10, 14]]
 
-    def test_add_motif_with_citation(self, client, motif_with_citation_data):
+    @patch("reprise.service.generate_cloze_deletion")
+    def test_add_motif_with_citation(
+        self, mock_generate, client, motif_with_citation_data
+    ):
+        # Mock the OpenAI response to return specific mask tuples
+        mock_generate.return_value = [[3, 7], [10, 14]]
+
         response = client.post(
             "/motifs",
             data=json.dumps(motif_with_citation_data),
@@ -88,14 +100,14 @@ class TestAPI:
         assert data["citation"] == motif_with_citation_data["citation"]
         assert data["cloze_deletions"] is not None
         assert len(data["cloze_deletions"]) == 1
-        assert data["cloze_deletions"][0]["mask_tuples"] == [[0, 1]]
+        assert data["cloze_deletions"][0]["mask_tuples"] == [[3, 7], [10, 14]]
 
         with database_session() as session:
             motif = session.query(Motif).filter_by(uuid=data["uuid"]).one_or_none()
             assert motif.content == motif_with_citation_data["content"]
             assert motif.citation.title == motif_with_citation_data["citation"]
             assert len(motif.cloze_deletions) == 1
-            assert motif.cloze_deletions[0].mask_tuples == [[0, 1]]
+            assert motif.cloze_deletions[0].mask_tuples == [[3, 7], [10, 14]]
 
     def test_update_motif(self, client, motif, motif_data):
         response = client.put(

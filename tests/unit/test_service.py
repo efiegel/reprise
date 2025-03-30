@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from reprise.service import Service
 from tests.factories import cloze_deletion_factory, motif_factory
 
@@ -34,18 +36,42 @@ class TestService:
         for reprisal in reprisals:
             assert reprisal.cloze_deletion is not None
 
-    def test_add_default_cloze_deletion(self, session):
+    @patch("reprise.service.generate_cloze_deletion")
+    def test_add_default_cloze_deletion(self, mock_generate, session):
+        # Mock the OpenAI API call to return a specific mask tuple
+        mock_generate.return_value = [[2, 5], [7, 10]]
+
+        motif = motif_factory(session=session).create(content="Test motif content")
+        assert len(motif.cloze_deletions) == 0
+
+        service = Service(session)
+        cloze_deletion = service.add_default_cloze_deletion(motif.uuid)
+
+        # Verify the OpenAI client was called with the motif content
+        mock_generate.assert_called_once_with(motif.content)
+
+        # Verify the cloze deletion was created with the mocked mask tuples
+        assert cloze_deletion is not None
+        assert cloze_deletion.mask_tuples == [[2, 5], [7, 10]]
+        assert cloze_deletion.motif_uuid == motif.uuid
+
+        # Check that the motif now has the cloze deletion
+        session.refresh(motif)
+        assert len(motif.cloze_deletions) == 1
+        assert motif.cloze_deletions[0].mask_tuples == [[2, 5], [7, 10]]
+
+    @patch("reprise.service.generate_cloze_deletion")
+    def test_add_default_cloze_deletion_fallback(self, mock_generate, session):
+        # Mock the OpenAI API call to raise an exception
+        mock_generate.side_effect = Exception("API Error")
+
         motif = motif_factory(session=session).create()
         assert len(motif.cloze_deletions) == 0
 
         service = Service(session)
         cloze_deletion = service.add_default_cloze_deletion(motif.uuid)
 
+        # Verify the fallback behavior works
         assert cloze_deletion is not None
+        # Default mask tuple should be used
         assert cloze_deletion.mask_tuples == [[0, 1]]
-        assert cloze_deletion.motif_uuid == motif.uuid
-
-        # Check that the motif now has the cloze deletion
-        session.refresh(motif)
-        assert len(motif.cloze_deletions) == 1
-        assert motif.cloze_deletions[0].mask_tuples == [[0, 1]]
