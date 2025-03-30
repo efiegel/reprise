@@ -72,7 +72,8 @@ def generate_cloze_deletion(content: str) -> List[List[int]]:
             {
                 "role": "system",
                 "content": """You are a helpful assistant that creates cloze deletions for learning purposes.
-                Given a text, identify the most important word(s) to mask out, as if you were trying learn the text with flashcards.
+                Given a text, identify the single most important word or phrase to mask out, as if you
+                were to learn the text with flashcards and wanted to single out the important meaning.
                 
                 Return your response as a JSON object with a 'words_to_mask' key containing an array of strings.
                 Each string is a word or short phrase that should be masked in the text.
@@ -80,8 +81,15 @@ def generate_cloze_deletion(content: str) -> List[List[int]]:
                 For example, if the input is 'The sky is blue' and you want to mask 'blue', return:
                 { "words_to_mask": ["blue"] }
                 
-                If you want to mask multiple parts, include multiple words like:
-                { "words_to_mask": ["sky", "blue"] }
+                You can mask multiple words or phrases, but only do so if it doesn't over-mask the text.
+                For example, if the input it 'The sky is blue' you should not mask 'sky' and 'blue' because
+                that would make reconstruction of the text unrealistic (all context is gone).
+                
+                If you want to mask multiple words, include multiple words like:
+                { "words_to_mask": ["word_1", "word_2"] }
+
+                If you mask a phrase, include the phrase as a single string:
+                { "words_to_mask": ["Eiffel Tower"] }
                 
                 Be precise with your words to ensure they can be found exactly in the text.
                 """,
