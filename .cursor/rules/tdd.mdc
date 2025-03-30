@@ -3,10 +3,8 @@ description:
 globs: *.py
 alwaysApply: false
 ---
-Run pytest on the appropriate file whenever you make a code change, and
-update, add, or remove tests as necessary to cover the changes.
+Run pytest on the appropriate file whenever you make a code change, and update, add, or remove tests as necessary to cover the changes.
 
-Unit tests are in /tests/unit, integration tests are in /tests/integration.
+Note that unit tests are in /tests/unit, integration tests are in /tests/integration.
 
-Once everything looks good, run _all_ tests to be sure there were no regressions.
-Ensure complete coverage too, so run pytest with `--cov=reprise --cov-fail-under=100`.
+Once everything looks good, run _all_ tests to be sure there were no regressions. Ensure complete coverage too, so run pytest with `--cov=reprise --cov-fail-under=100`.
