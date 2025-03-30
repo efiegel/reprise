@@ -23,6 +23,7 @@ class TestOpenAIClient:
             ("skylark skies sky", ["sky"], [[14, 16]]),
             ("The sky is blue and the blue sky is nice", ["blue sky"], [[24, 31]]),
             ("The problem: sky is very blue.", ["sky", "blue"], [[13, 15], [25, 28]]),
+            ("The time complexity is O(n log n)", ["O(n log n)"], [[23, 32]]),
         ],
     )
     def test_find_word_indices_parametrized(
