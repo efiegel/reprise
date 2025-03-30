@@ -42,8 +42,7 @@ def generate_cloze_deletion(content: str) -> List[List[int]]:
             {
                 "role": "system",
                 "content": """You are a helpful assistant that creates cloze deletions for learning purposes.
-                A cloze deletion is a learning exercise where certain parts of a text are masked out.
-                Given a text, identify the most important word(s) to mask out, as if you were trying learn the text like with flashcards.
+                Given a text, identify the most important word(s) to mask out, as if you were trying learn the text with flashcards.
                 
                 Return your response as a JSON object with a 'mask_tuples' key containing an array of [start, end] position pairs.
                 Each pair identifies a span of text to mask, where 'start' is the starting character index (0-based) 
@@ -53,12 +52,12 @@ def generate_cloze_deletion(content: str) -> List[List[int]]:
                 { "mask_tuples": [[11, 14]] }
                 
                 If you want to mask multiple parts, include multiple pairs like:
-                { "mask_tuples": [[0, 2], [11, 14]] }
+                { "mask_tuples": [[4, 6], [11, 14]] }
 
-                Be sure to account for the spaces between words when determining character indices.
+                Note that spaces are also characters, so don't omit them when determining character indices.
                 """,
             },
-            {"role": "user", "content": f"Create a cloze deletion for: {content}"},
+            {"role": "user", "content": f"Create a cloze deletion for: '{content}'"},
         ],
         temperature=0.7,
         max_tokens=150,
