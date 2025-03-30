@@ -76,6 +76,11 @@ def create_motif(body: MotifCreate) -> Dict[str, Any]:
                 citation = citation_repository.add_citation(body.citation)
             motif = repository.add_citation(motif.uuid, citation)
 
+        # Add a default cloze deletion
+        service = Service(session)
+        service.add_default_cloze_deletion(motif.uuid)
+        session.refresh(motif)
+
         response = MotifResponse(
             uuid=motif.uuid,
             content=motif.content,

@@ -65,9 +65,15 @@ class TestAPI:
         assert data["content"] == motif_data["content"]
         assert data["citation"] is None
 
+        assert data["cloze_deletions"] is not None
+        assert len(data["cloze_deletions"]) == 1
+        assert data["cloze_deletions"][0]["mask_tuples"] == [[0, 1]]
+
         with database_session() as session:
             motif = session.query(Motif).filter_by(uuid=data["uuid"]).one_or_none()
             assert motif.content == motif_data["content"]
+            assert len(motif.cloze_deletions) == 1
+            assert motif.cloze_deletions[0].mask_tuples == [[0, 1]]
 
     def test_add_motif_with_citation(self, client, motif_with_citation_data):
         response = client.post(
@@ -80,11 +86,16 @@ class TestAPI:
         assert response.status_code == 200
         assert data["content"] == motif_with_citation_data["content"]
         assert data["citation"] == motif_with_citation_data["citation"]
+        assert data["cloze_deletions"] is not None
+        assert len(data["cloze_deletions"]) == 1
+        assert data["cloze_deletions"][0]["mask_tuples"] == [[0, 1]]
 
         with database_session() as session:
             motif = session.query(Motif).filter_by(uuid=data["uuid"]).one_or_none()
             assert motif.content == motif_with_citation_data["content"]
             assert motif.citation.title == motif_with_citation_data["citation"]
+            assert len(motif.cloze_deletions) == 1
+            assert motif.cloze_deletions[0].mask_tuples == [[0, 1]]
 
     def test_update_motif(self, client, motif, motif_data):
         response = client.put(

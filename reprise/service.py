@@ -4,7 +4,11 @@ from uuid import uuid4
 from sqlalchemy.orm import Session
 
 from reprise.db import Reprisal
-from reprise.repository import MotifRepository, ReprisalRepository
+from reprise.repository import (
+    ClozeDeletionRepository,
+    MotifRepository,
+    ReprisalRepository,
+)
 
 
 class Service:
@@ -14,6 +18,7 @@ class Service:
         self.session = session
         self.motif_repository = MotifRepository(session)
         self.reprisal_repository = ReprisalRepository(session)
+        self.cloze_deletion_repository = ClozeDeletionRepository(session)
 
     def reprise(self) -> list[Reprisal]:
         motifs = self.motif_repository.get_motifs()
@@ -41,3 +46,8 @@ class Service:
                     break
 
         return reprisals
+
+    def add_default_cloze_deletion(self, motif_uuid: str):
+        return self.cloze_deletion_repository.add_cloze_deletion(
+            motif_uuid=motif_uuid, mask_tuples=[[0, 1]]
+        )

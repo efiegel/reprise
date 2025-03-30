@@ -33,3 +33,19 @@ class TestService:
         reprisals = service.reprise()
         for reprisal in reprisals:
             assert reprisal.cloze_deletion is not None
+
+    def test_add_default_cloze_deletion(self, session):
+        motif = motif_factory(session=session).create()
+        assert len(motif.cloze_deletions) == 0
+
+        service = Service(session)
+        cloze_deletion = service.add_default_cloze_deletion(motif.uuid)
+
+        assert cloze_deletion is not None
+        assert cloze_deletion.mask_tuples == [[0, 1]]
+        assert cloze_deletion.motif_uuid == motif.uuid
+
+        # Check that the motif now has the cloze deletion
+        session.refresh(motif)
+        assert len(motif.cloze_deletions) == 1
+        assert motif.cloze_deletions[0].mask_tuples == [[0, 1]]
