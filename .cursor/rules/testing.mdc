@@ -1,0 +1,12 @@
+---
+description: 
+globs: *.py
+alwaysApply: false
+---
+Run pytest with `--cov=reprise --cov-fail-under=100` whenever you make a code change.
+
+Also keep these guildelines in mind when writing tests:
+- single-purpose tests are ideal (multiple asserts are OK if they suit the test purpose)
+- use parametrization when appropriate
+- use existing fixtures if they're relevant
+- update existing fixtures if it doesn't adversely effect other tests
