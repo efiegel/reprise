@@ -1,0 +1,10 @@
+---
+description: 
+globs: tests/**/*.py
+alwaysApply: false
+---
+Tests should be just as clean as our code! Keep these guildelines in mind:
+- single-purpose tests are ideal (multiple asserts are OK if they suit the test purpose)
+- use parametrization when appropriate
+- use existing fixtures if they're relevant
+- update existing fixtures if it doesn't adversely effect other tests
