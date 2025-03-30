@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from reprise.openai_client import find_word_indices, generate_cloze_deletion
+from reprise.openai_client import find_word_indices, generate_cloze_deletions
 
 
 class TestOpenAIClient:
@@ -35,7 +35,7 @@ class TestOpenAIClient:
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletion_success(self, mock_client):
+    def test_generate_cloze_deletions_success(self, mock_client):
         # Setup mock chat completions
         mock_completion = MagicMock()
         mock_completion.choices = [
@@ -48,7 +48,7 @@ class TestOpenAIClient:
         mock_client.chat.completions.create.return_value = mock_completion
 
         # Test the function
-        result = generate_cloze_deletion("The sky is blue")
+        result = generate_cloze_deletions("The sky is blue")
 
         # Verify the result
         assert len(result) == 2
@@ -57,15 +57,15 @@ class TestOpenAIClient:
         mock_client.chat.completions.create.assert_called_once()
 
     @patch("reprise.openai_client.OPENAI_API_KEY", None)
-    def test_generate_cloze_deletion_no_api_key(self):
+    def test_generate_cloze_deletions_no_api_key(self):
         # Test when API key is not provided
         with pytest.raises(ValueError) as excinfo:
-            generate_cloze_deletion("The sky is blue")
+            generate_cloze_deletions("The sky is blue")
         assert "OpenAI API key is required" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletion_invalid_json(self, mock_client):
+    def test_generate_cloze_deletions_invalid_json(self, mock_client):
         # Setup mock response with invalid JSON
         mock_completion = MagicMock()
         mock_completion.choices = [MagicMock(message=MagicMock(content="invalid json"))]
@@ -73,12 +73,12 @@ class TestOpenAIClient:
 
         # Test the function
         with pytest.raises(ValueError) as excinfo:
-            generate_cloze_deletion("The sky is blue")
+            generate_cloze_deletions("The sky is blue")
         assert "Invalid JSON" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletion_missing_cloze_deletion_sets(self, mock_client):
+    def test_generate_cloze_deletions_missing_cloze_deletion_sets(self, mock_client):
         # Setup mock response with missing cloze_deletion_sets key
         mock_completion = MagicMock()
         mock_completion.choices = [
@@ -88,12 +88,12 @@ class TestOpenAIClient:
 
         # Test the function
         with pytest.raises(ValueError) as excinfo:
-            generate_cloze_deletion("The sky is blue")
+            generate_cloze_deletions("The sky is blue")
         assert "missing required 'cloze_deletion_sets' field" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletion_invalid_cloze_deletion_sets(self, mock_client):
+    def test_generate_cloze_deletions_invalid_cloze_deletion_sets(self, mock_client):
         # Setup mock response with invalid cloze_deletion_sets format
         mock_completion = MagicMock()
         mock_completion.choices = [
@@ -103,12 +103,12 @@ class TestOpenAIClient:
 
         # Test the function
         with pytest.raises(ValueError) as excinfo:
-            generate_cloze_deletion("The sky is blue")
+            generate_cloze_deletions("The sky is blue")
         assert "Invalid cloze_deletion_sets format" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletion_no_matches(self, mock_client):
+    def test_generate_cloze_deletions_no_matches(self, mock_client):
         # Setup mock response with words that don't exist in the text
         mock_completion = MagicMock()
         mock_completion.choices = [
@@ -120,23 +120,23 @@ class TestOpenAIClient:
 
         # Test the function
         with pytest.raises(ValueError) as excinfo:
-            generate_cloze_deletion("The sky is blue")
+            generate_cloze_deletions("The sky is blue")
         assert "No valid mask tuples found" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletion_api_error(self, mock_client):
+    def test_generate_cloze_deletions_api_error(self, mock_client):
         # Setup mock to raise an exception
         mock_client.chat.completions.create.side_effect = Exception("API Error")
 
         # Test the function
         with pytest.raises(Exception) as excinfo:
-            generate_cloze_deletion("The sky is blue")
+            generate_cloze_deletions("The sky is blue")
         assert "API Error" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletion_key_error(self, mock_client):
+    def test_generate_cloze_deletions_key_error(self, mock_client):
         # Setup a mock that produces valid JSON but will cause KeyError during processing
         mock_completion = MagicMock()
         # This will pass validation but cause a TypeError when accessing word in find_word_indices
@@ -151,13 +151,13 @@ class TestOpenAIClient:
 
             # Test the function
             with pytest.raises(ValueError) as excinfo:
-                generate_cloze_deletion("The sky is blue")
+                generate_cloze_deletions("The sky is blue")
             assert "Error extracting data from OpenAI response" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletion_with_n_max(self, mock_client):
-        """Test the generate_cloze_deletion function with the n_max parameter."""
+    def test_generate_cloze_deletions_with_n_max(self, mock_client):
+        """Test the generate_cloze_deletions function with the n_max parameter."""
         # Setup mock chat completions
         mock_completion = MagicMock()
         mock_completion.choices = [
@@ -170,7 +170,7 @@ class TestOpenAIClient:
         mock_client.chat.completions.create.return_value = mock_completion
 
         # Test the function with n_max=5
-        result = generate_cloze_deletion("The sky is blue", n_max=5)
+        result = generate_cloze_deletions("The sky is blue", n_max=5)
 
         # Verify the result has 3 sets (the model decided to use fewer than n_max)
         assert len(result) == 3

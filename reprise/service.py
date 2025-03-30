@@ -4,7 +4,7 @@ from uuid import uuid4
 from sqlalchemy.orm import Session
 
 from reprise.db import Reprisal
-from reprise.openai_client import generate_cloze_deletion
+from reprise.openai_client import generate_cloze_deletions
 from reprise.repository import (
     ClozeDeletionRepository,
     MotifRepository,
@@ -60,7 +60,7 @@ class Service:
             List of created ClozeDeletion objects
         """
         motif = self.motif_repository.get_motif(motif_uuid)
-        mask_tuples_sets = generate_cloze_deletion(motif.content, n_max)
+        mask_tuples_sets = generate_cloze_deletions(content=motif.content, n_max=n_max)
 
         cloze_deletions = []
         for mask_tuples in mask_tuples_sets:

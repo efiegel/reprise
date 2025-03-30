@@ -56,7 +56,7 @@ def find_word_indices(text: str, words_to_mask: List[str]) -> List[List[int]]:
     return indices
 
 
-def generate_cloze_deletion(content: str, n_max: int = 1) -> List[List[List[int]]]:
+def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int]]]:
     """
     Use OpenAI model to generate multiple cloze deletion sets.
     Returns a list of cloze deletion sets, each containing a list of [start, end]

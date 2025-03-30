@@ -38,7 +38,7 @@ class TestService:
         for reprisal in reprisals:
             assert reprisal.cloze_deletion is not None
 
-    @patch("reprise.service.generate_cloze_deletion")
+    @patch("reprise.service.generate_cloze_deletions")
     def test_add_default_cloze_deletion(self, mock_generate, session):
         # Mock the OpenAI API call to return a list of mask tuple sets
         mock_generate.return_value = [[[2, 5], [7, 10]], [[12, 15]]]
@@ -47,10 +47,10 @@ class TestService:
         assert len(motif.cloze_deletions) == 0
 
         service = Service(session)
-        cloze_deletions = service.cloze_delete_motif(motif.uuid)
+        cloze_deletions = service.cloze_delete_motif(motif.uuid, n_max=1)
 
         # Verify the OpenAI client was called with the motif content
-        mock_generate.assert_called_once_with(motif.content, n=2)
+        mock_generate.assert_called_once_with(content=motif.content, n_max=1)
 
         # Verify the cloze deletion was created with the mocked mask tuples
         assert len(cloze_deletions) == 2
@@ -67,7 +67,7 @@ class TestService:
         assert [[2, 5], [7, 10]] in mask_tuples_list
         assert [[12, 15]] in mask_tuples_list
 
-    @patch("reprise.service.generate_cloze_deletion")
+    @patch("reprise.service.generate_cloze_deletions")
     def test_add_default_cloze_deletion_fallback(self, mock_generate, session):
         # Mock the OpenAI API call to raise an exception
         mock_generate.side_effect = Exception("API Error")
@@ -79,6 +79,6 @@ class TestService:
 
         # Now we expect the exception to be raised
         with pytest.raises(Exception) as excinfo:
-            service.cloze_delete_motif(motif.uuid)
+            service.cloze_delete_motif(motif.uuid, n_max=1)
 
         assert "API Error" in str(excinfo.value)
