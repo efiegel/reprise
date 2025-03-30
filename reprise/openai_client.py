@@ -56,7 +56,7 @@ def find_word_indices(text: str, words_to_mask: List[str]) -> List[List[int]]:
     return indices
 
 
-def generate_cloze_deletion(content: str, n: int = 1) -> List[List[List[int]]]:
+def generate_cloze_deletion(content: str, n_max: int = 1) -> List[List[List[int]]]:
     """
     Use OpenAI model to generate multiple cloze deletion sets.
     Returns a list of cloze deletion sets, each containing a list of [start, end]
@@ -64,7 +64,7 @@ def generate_cloze_deletion(content: str, n: int = 1) -> List[List[List[int]]]:
 
     Args:
         content: The text content to generate cloze deletions for
-        n: The number of different cloze deletion sets to generate (default: 1)
+        n_max: The maximum number of different cloze deletion sets to generate (default: 3)
 
     Returns:
         List of lists of [start, end] positions, where each inner list represents a cloze deletion set
@@ -84,13 +84,16 @@ def generate_cloze_deletion(content: str, n: int = 1) -> List[List[List[int]]]:
             {
                 "role": "system",
                 "content": f"""You are a helpful assistant that creates cloze deletions for learning purposes.
-                Given a text, create {n} different cloze deletion sets where each set masks different important
-                words or phrases to test different aspects of the text.
+                Given a text, create an appropriate number of different cloze deletion sets (up to {n_max} sets) 
+                where each set masks different important words or phrases to test different aspects of the text.
+                
+                Use your judgment to determine how many sets would be appropriate based on the text length and 
+                complexity, but do not exceed {n_max} sets.
                 
                 Return your response as a JSON object with a 'cloze_deletion_sets' key containing an array of arrays.
                 Each inner array contains strings representing the words or phrases to mask for that cloze deletion set.
                 
-                For example, if asked to create 2 cloze deletion sets for "The sky is blue and the grass is green":
+                For example, if asked to create cloze deletion sets for "The sky is blue and the grass is green":
                 {{
                   "cloze_deletion_sets": [
                     ["blue", "green"],  // First deletion set masks colors
@@ -100,12 +103,12 @@ def generate_cloze_deletion(content: str, n: int = 1) -> List[List[List[int]]]:
                 
                 Each set should focus on masking different aspects of the content.
                 Be precise with your words to ensure they can be found exactly in the text.
-                Provide exactly {n} different cloze deletion sets, unless the text is too short.
+                For very short or simple texts, you may create fewer sets if appropriate.
                 """,
             },
             {
                 "role": "user",
-                "content": f"Create {n} different cloze deletion sets for: '{content}'",
+                "content": f"Create appropriate cloze deletion sets (maximum {n_max}) for: '{content}'",
             },
         ],
         temperature=0.7,

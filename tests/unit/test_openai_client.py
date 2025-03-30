@@ -153,3 +153,33 @@ class TestOpenAIClient:
             with pytest.raises(ValueError) as excinfo:
                 generate_cloze_deletion("The sky is blue")
             assert "Error extracting data from OpenAI response" in str(excinfo.value)
+
+    @patch("reprise.openai_client.client")
+    @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
+    def test_generate_cloze_deletion_with_n_max(self, mock_client):
+        """Test the generate_cloze_deletion function with the n_max parameter."""
+        # Setup mock chat completions
+        mock_completion = MagicMock()
+        mock_completion.choices = [
+            MagicMock(
+                message=MagicMock(
+                    content='{"cloze_deletion_sets": [["sky"], ["blue"], ["is"]]}'
+                )
+            )
+        ]
+        mock_client.chat.completions.create.return_value = mock_completion
+
+        # Test the function with n_max=5
+        result = generate_cloze_deletion("The sky is blue", n_max=5)
+
+        # Verify the result has 3 sets (the model decided to use fewer than n_max)
+        assert len(result) == 3
+        assert result[0] == [[4, 6]]
+        assert result[1] == [[11, 14]]
+        assert result[2] == [[8, 9]]
+
+        # Check that n_max was properly passed in the API call
+        call_args = mock_client.chat.completions.create.call_args[1]
+        messages = call_args["messages"]
+        assert "up to 5 sets" in messages[0]["content"]
+        assert "maximum 5" in messages[1]["content"]
