@@ -79,7 +79,7 @@ def create_motif(body: MotifCreate) -> Dict[str, Any]:
         # Generate a cloze deletion for the motif
         service = Service(session)
         try:
-            service.generate_cloze_deletion(motif.uuid)
+            service.cloze_delete_motif(motif.uuid)
         except Exception as e:
             # Log the error but don't prevent motif creation
             app.logger.error(f"Error creating cloze deletion with OpenAI: {e}")

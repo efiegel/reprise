@@ -55,7 +55,7 @@ class TestAPI:
             {"uuid": cloze_deletion.uuid, "mask_tuples": cloze_deletion.mask_tuples}
         ]
 
-    @patch("reprise.service.openai_generate_cloze_deletion")
+    @patch("reprise.service.generate_cloze_deletion")
     def test_add_motif_without_citation(self, mock_generate, client, motif_data):
         # Mock the OpenAI response to return specific mask tuples
         mock_generate.return_value = [[3, 7], [10, 14]]
@@ -81,7 +81,7 @@ class TestAPI:
             assert len(motif.cloze_deletions) == 1
             assert motif.cloze_deletions[0].mask_tuples == [[3, 7], [10, 14]]
 
-    @patch("reprise.service.openai_generate_cloze_deletion")
+    @patch("reprise.service.generate_cloze_deletion")
     def test_add_motif_with_citation(
         self, mock_generate, client, motif_with_citation_data
     ):
@@ -399,7 +399,7 @@ class TestAPI:
 
         assert response.status_code == 400
 
-    @patch("reprise.service.openai_generate_cloze_deletion")
+    @patch("reprise.service.generate_cloze_deletion")
     def test_add_motif_with_openai_error(self, mock_generate, client, motif_data):
         # Mock OpenAI API to raise an exception
         mock_generate.side_effect = Exception("OpenAI API Error")
