@@ -76,10 +76,10 @@ def create_motif(body: MotifCreate) -> Dict[str, Any]:
                 citation = citation_repository.add_citation(body.citation)
             motif = repository.add_citation(motif.uuid, citation)
 
-        # Add a default cloze deletion
+        # Generate a cloze deletion for the motif
         service = Service(session)
         try:
-            service.add_default_cloze_deletion(motif.uuid)
+            service.generate_cloze_deletion(motif.uuid)
         except Exception as e:
             # Log the error but don't prevent motif creation
             app.logger.error(f"Error creating cloze deletion with OpenAI: {e}")

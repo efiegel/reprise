@@ -4,7 +4,9 @@ from uuid import uuid4
 from sqlalchemy.orm import Session
 
 from reprise.db import Reprisal
-from reprise.openai_client import generate_cloze_deletion
+from reprise.openai_client import (
+    generate_cloze_deletion as openai_generate_cloze_deletion,
+)
 from reprise.repository import (
     ClozeDeletionRepository,
     MotifRepository,
@@ -48,9 +50,10 @@ class Service:
 
         return reprisals
 
-    def add_default_cloze_deletion(self, motif_uuid: str):
+    def generate_cloze_deletion(self, motif_uuid: str):
         motif = self.motif_repository.get_motif(motif_uuid)
-        mask_tuples = generate_cloze_deletion(motif.content)
+        mask_tuples = openai_generate_cloze_deletion(motif.content)
+
         return self.cloze_deletion_repository.add_cloze_deletion(
             motif_uuid=motif_uuid, mask_tuples=mask_tuples
         )
