@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+import pytest
+
 from reprise.service import Service
 from tests.factories import cloze_deletion_factory, motif_factory
 
@@ -69,9 +71,9 @@ class TestService:
         assert len(motif.cloze_deletions) == 0
 
         service = Service(session)
-        cloze_deletion = service.add_default_cloze_deletion(motif.uuid)
 
-        # Verify the fallback behavior works
-        assert cloze_deletion is not None
-        # Default mask tuple should be used
-        assert cloze_deletion.mask_tuples == [[0, 1]]
+        # Now we expect the exception to be raised
+        with pytest.raises(Exception) as excinfo:
+            service.add_default_cloze_deletion(motif.uuid)
+
+        assert "API Error" in str(excinfo.value)

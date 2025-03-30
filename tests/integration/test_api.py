@@ -398,3 +398,26 @@ class TestAPI:
         )
 
         assert response.status_code == 400
+
+    @patch("reprise.service.generate_cloze_deletion")
+    def test_add_motif_with_openai_error(self, mock_generate, client, motif_data):
+        # Mock OpenAI API to raise an exception
+        mock_generate.side_effect = Exception("OpenAI API Error")
+
+        response = client.post(
+            "/motifs",
+            data=json.dumps(motif_data),
+            content_type="application/json",
+        )
+
+        data = json.loads(response.data)
+        assert response.status_code == 200
+        assert data["content"] == motif_data["content"]
+
+        # The motif should be created but no cloze deletion
+        assert data["cloze_deletions"] is None or len(data["cloze_deletions"]) == 0
+
+        with database_session() as session:
+            motif = session.query(Motif).filter_by(uuid=data["uuid"]).one_or_none()
+            assert motif.content == motif_data["content"]
+            assert len(motif.cloze_deletions) == 0

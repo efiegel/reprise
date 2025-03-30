@@ -78,7 +78,14 @@ def create_motif(body: MotifCreate) -> Dict[str, Any]:
 
         # Add a default cloze deletion
         service = Service(session)
-        service.add_default_cloze_deletion(motif.uuid)
+        try:
+            service.add_default_cloze_deletion(motif.uuid)
+        except Exception as e:
+            # Log the error but don't prevent motif creation
+            app.logger.error(f"Error creating cloze deletion with OpenAI: {e}")
+            app.logger.error("No cloze deletion was created for this motif")
+
+        # Refresh to get the most up-to-date motif data
         session.refresh(motif)
 
         response = MotifResponse(
