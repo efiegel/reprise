@@ -56,6 +56,95 @@ def find_word_indices(text: str, words_to_mask: List[str]) -> List[List[int]]:
     return indices
 
 
+def evaluate_cloze_quality(content: str, mask_indices: List[List[int]]) -> bool:
+    """
+    Evaluate whether a cloze deletion set is of good quality.
+
+    Args:
+        content: The original text content
+        mask_indices: List of [start, end] positions to mask
+
+    Returns:
+        A boolean indicating if the cloze deletion is of good quality
+
+    Raises:
+        ValueError: If the OpenAI API key is not set
+        Exception: For any OpenAI API errors
+    """
+    if not OPENAI_API_KEY or not client:
+        logger.warning("OpenAI API key not set")
+        raise ValueError("OpenAI API key is required but not provided")
+
+    # Create a masked version of the content to show what will be hidden
+    masked_content = list(content)
+    for start, end in mask_indices:
+        for i in range(start, end + 1):
+            masked_content[i] = "_"
+    masked_content = "".join(masked_content)
+
+    # Extract the masked words
+    masked_words = []
+    for start, end in mask_indices:
+        masked_words.append(content[start : end + 1])
+
+    response = client.chat.completions.create(
+        model=OPENAI_MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": """You are an expert in educational flashcard creation. 
+                You are evaluating the quality of a cloze deletion (masked text) flashcard.
+                
+                A good cloze deletion has these properties:
+                1. The masked word(s) can be reasonably inferred from context
+                2. There is a likely single answer in the appropriate context
+                3. The masked content tests important information worth remembering
+                4. The masked content is neither too obvious nor too obscure
+                
+                Determine if this cloze deletion is of good quality.
+                Respond with only 'true' if it's good quality or 'false' if it's poor quality.""",
+            },
+            {
+                "role": "user",
+                "content": f"Original text: '{content}'\nMasked text: '{masked_content}'\nMasked words: {masked_words}\n\nIs this cloze deletion of good quality?",
+            },
+        ],
+        temperature=0.3,
+        max_tokens=10,
+    )
+
+    # Extract the response and parse as a boolean
+    response_text = response.choices[0].message.content.strip().lower()
+    return _parse_quality_response(response_text)
+
+
+def _parse_quality_response(response_text: str) -> bool:
+    """
+    Parse the API response text to determine if the cloze deletion is of good quality.
+
+    Args:
+        response_text: The text response from the API
+
+    Returns:
+        A boolean indicating if the cloze deletion is of good quality
+    """
+    try:
+        if "true" in response_text:
+            return True
+        elif "false" in response_text:
+            return False
+        else:
+            logger.warning(f"Unexpected response format: {response_text}")
+            # Default to False if we can't clearly determine
+            return False
+    except Exception as e:
+        logger.error(
+            f"Error parsing quality evaluation: {e}. Response: {response_text}"
+        )
+        # Default to False if we encounter an error
+        return False
+
+
 def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int]]]:
     """
     Use OpenAI model to generate multiple cloze deletion sets.
@@ -154,12 +243,22 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
                 logger.warning(f"No valid mask tuples found for words: {words_set}")
                 continue
 
-            all_mask_tuples.append(mask_tuples)
+            # Evaluate the quality of this cloze deletion set
+            quality = evaluate_cloze_quality(content, mask_tuples)
+            logger.info(f"Cloze set quality: {quality} for words: {words_set}")
+
+            # Only include sets with good quality
+            if quality:
+                all_mask_tuples.append(mask_tuples)
+            else:
+                logger.info(f"Rejecting low-quality cloze set for words: {words_set}")
 
         # If no valid tuples found in any sets, raise an exception
         if not all_mask_tuples:
             logger.error("No valid mask tuples found in any cloze deletion set")
-            raise ValueError("No valid mask tuples found in the content range")
+            raise ValueError(
+                "No valid mask tuples found in the content range or all sets were low quality"
+            )
 
         return all_mask_tuples
 
