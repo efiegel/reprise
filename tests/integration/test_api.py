@@ -56,10 +56,7 @@ class TestAPI:
         ]
 
     @patch("reprise.service.generate_cloze_deletions")
-    @patch("reprise.service.evaluate_cloze_quality", return_value=True)
-    def test_add_motif_without_citation(
-        self, mock_evaluate, mock_generate, client, motif_data
-    ):
+    def test_add_motif_without_citation(self, mock_generate, client, motif_data):
         # Mock the OpenAI response to return specific mask tuple sets
         mock_generate.return_value = [[[3, 7], [10, 14]], [[1, 2]]]
 
@@ -89,9 +86,8 @@ class TestAPI:
             assert [[1, 2]] in mask_tuples_list
 
     @patch("reprise.service.generate_cloze_deletions")
-    @patch("reprise.service.evaluate_cloze_quality", return_value=True)
     def test_add_motif_with_citation(
-        self, mock_evaluate, mock_generate, client, motif_with_citation_data
+        self, mock_generate, client, motif_with_citation_data
     ):
         # Mock the OpenAI response to return specific mask tuple sets
         mock_generate.return_value = [[[3, 7], [10, 14]], [[1, 2]]]
@@ -412,10 +408,7 @@ class TestAPI:
         assert response.status_code == 400
 
     @patch("reprise.service.generate_cloze_deletions")
-    @patch("reprise.service.evaluate_cloze_quality", return_value=True)
-    def test_add_motif_with_openai_error(
-        self, mock_evaluate, mock_generate, client, motif_data
-    ):
+    def test_add_motif_with_openai_error(self, mock_generate, client, motif_data):
         # Mock OpenAI API to raise an exception
         mock_generate.side_effect = Exception("OpenAI API Error")
 

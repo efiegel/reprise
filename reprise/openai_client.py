@@ -56,64 +56,6 @@ def find_word_indices(text: str, words_to_mask: List[str]) -> List[List[int]]:
     return indices
 
 
-def evaluate_cloze_quality(content: str, mask_indices: List[List[int]]) -> bool:
-    """
-    Evaluate whether a cloze deletion set is of good quality.
-
-    Args:
-        content: The original text content
-        mask_indices: List of [start, end] positions to mask
-
-    Returns:
-        A boolean indicating if the cloze deletion is of good quality
-
-    Raises:
-        ValueError: If the OpenAI API key is not set
-        Exception: For any OpenAI API errors
-    """
-    if not OPENAI_API_KEY or not client:
-        raise ValueError("OpenAI API key is required but not provided")
-
-    # Create a masked version of the content to show what will be hidden
-    masked_content = list(content)
-    for start, end in mask_indices:
-        for i in range(start, end + 1):
-            masked_content[i] = "_"
-    masked_content = "".join(masked_content)
-
-    response = client.chat.completions.create(
-        model=OPENAI_MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": """You are an expert in educational flashcard creation. 
-                You are evaluating the quality of a cloze deletion (masked text) flashcard.
-                A good cloze deletion has one hallmark quality: there is only one likely answer to fill the blank.
-
-                Examples:
-                "The color of the sky is ____" is quality
-                "The color of the ___ is blue" is not quality
-                "The color of the ___ is ____" is not quality
-                "The _____ of the sky is ____" is not quality
-
-                You will be given a cloze deletion (masked text) flashcard, and you are
-                to determine if it's of good quality. Respond with only 'true' if it's 
-                good quality or 'false' if it's poor quality.""",
-            },
-            {
-                "role": "user",
-                "content": f"Flashcard: '{masked_content}'",
-            },
-        ],
-        temperature=0.3,
-        max_tokens=10,
-    )
-
-    # Extract the response and parse as a boolean
-    response_text = response.choices[0].message.content.strip().lower()
-    return "true" in response_text
-
-
 def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int]]]:
     """
     Use OpenAI model to generate multiple cloze deletion sets.

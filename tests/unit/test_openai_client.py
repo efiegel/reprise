@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from reprise.openai_client import (
-    evaluate_cloze_quality,
     find_word_indices,
     generate_cloze_deletions,
 )
@@ -187,86 +186,3 @@ class TestOpenAIClient:
         messages = call_args["messages"]
         assert "up to 5 sets" in messages[0]["content"]
         assert "maximum 5" in messages[1]["content"]
-
-    @patch("reprise.openai_client.client")
-    @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_evaluate_cloze_quality_true(self, mock_client):
-        """Test evaluate_cloze_quality when OpenAI returns 'true'."""
-        # Setup mock chat completions
-        mock_completion = MagicMock()
-        mock_completion.choices = [MagicMock(message=MagicMock(content="true"))]
-        mock_client.chat.completions.create.return_value = mock_completion
-
-        # Test the function
-        result = evaluate_cloze_quality("The sky is blue", [[4, 6]])
-
-        # Verify the result is a boolean True
-        assert result is True
-        mock_client.chat.completions.create.assert_called_once()
-
-        # Verify the API was called with the correct parameters
-        call_args = mock_client.chat.completions.create.call_args[1]
-        # Don't assert the exact model name as it may change
-        assert "model" in call_args
-        assert call_args["temperature"] == 0.3
-        assert call_args["max_tokens"] == 10
-
-        # Check that the messages contain the correct masked content
-        messages = call_args["messages"]
-        user_message = messages[1]["content"]
-        assert "Flashcard: 'The ___ is blue'" in user_message
-
-    @patch("reprise.openai_client.client")
-    @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_evaluate_cloze_quality_false(self, mock_client):
-        """Test evaluate_cloze_quality when OpenAI returns 'false'."""
-        # Setup mock chat completions
-        mock_completion = MagicMock()
-        mock_completion.choices = [MagicMock(message=MagicMock(content="false"))]
-        mock_client.chat.completions.create.return_value = mock_completion
-
-        # Test the function
-        result = evaluate_cloze_quality("The sky is blue", [[11, 14]])  # Masking "blue"
-
-        # Verify the result is a boolean False
-        assert result is False
-        mock_client.chat.completions.create.assert_called_once()
-
-        # Verify the masked content in the API call
-        call_args = mock_client.chat.completions.create.call_args[1]
-        messages = call_args["messages"]
-        user_message = messages[1]["content"]
-        assert "Flashcard: 'The sky is ____'" in user_message
-
-    @patch("reprise.openai_client.client")
-    @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_evaluate_cloze_quality_unexpected_response(self, mock_client):
-        """Test evaluate_cloze_quality when OpenAI returns an unexpected response."""
-        # Setup mock chat completions
-        mock_completion = MagicMock()
-        mock_completion.choices = [
-            MagicMock(message=MagicMock(content="some unexpected response"))
-        ]
-        mock_client.chat.completions.create.return_value = mock_completion
-
-        # Test the function
-        result = evaluate_cloze_quality(
-            "The sky is blue", [[4, 6], [11, 14]]
-        )  # Masking multiple words
-
-        # Verify the result is False for unexpected response
-        assert result is False
-        mock_client.chat.completions.create.assert_called_once()
-
-        # Verify multiple words are properly masked
-        call_args = mock_client.chat.completions.create.call_args[1]
-        messages = call_args["messages"]
-        user_message = messages[1]["content"]
-        assert "Flashcard: 'The ___ is ____'" in user_message
-
-    @patch("reprise.openai_client.OPENAI_API_KEY", None)
-    def test_evaluate_cloze_quality_no_api_key(self):
-        """Test evaluate_cloze_quality when API key is not provided."""
-        with pytest.raises(ValueError) as excinfo:
-            evaluate_cloze_quality("The sky is blue", [[4, 6]])
-        assert "OpenAI API key is required" in str(excinfo.value)
