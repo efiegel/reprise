@@ -50,7 +50,9 @@ class TestService:
         assert len(motif.cloze_deletions) == 0
 
         service = Service(session)
-        cloze_deletions = service.cloze_delete_motif(motif.uuid, n_max=1)
+        cloze_deletions = service.cloze_delete_motif(
+            motif.uuid, n_max=1, evaluate_quality=True
+        )
 
         # Verify the OpenAI client was called with the motif content
         mock_generate.assert_called_once_with(content=motif.content, n_max=1)
@@ -106,7 +108,9 @@ class TestService:
         service = Service(session)
 
         # Call with quality evaluation enabled (default)
-        cloze_deletions = service.cloze_delete_motif(motif.uuid, n_max=1)
+        cloze_deletions = service.cloze_delete_motif(
+            motif.uuid, n_max=1, evaluate_quality=True
+        )
 
         # Verify evaluate_cloze_quality was called for each mask tuple set
         assert mock_evaluate.call_count == 2

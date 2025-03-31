@@ -214,9 +214,7 @@ class TestOpenAIClient:
         # Check that the messages contain the correct masked content
         messages = call_args["messages"]
         user_message = messages[1]["content"]
-        assert "Original text: 'The sky is blue'" in user_message
-        assert "Masked text: 'The ___ is blue'" in user_message
-        assert "Masked words: ['sky']" in user_message
+        assert "Flashcard: 'The ___ is blue'" in user_message
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
@@ -238,9 +236,7 @@ class TestOpenAIClient:
         call_args = mock_client.chat.completions.create.call_args[1]
         messages = call_args["messages"]
         user_message = messages[1]["content"]
-        assert "Original text: 'The sky is blue'" in user_message
-        assert "Masked text: 'The sky is ____'" in user_message
-        assert "Masked words: ['blue']" in user_message
+        assert "Flashcard: 'The sky is ____'" in user_message
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
@@ -266,9 +262,7 @@ class TestOpenAIClient:
         call_args = mock_client.chat.completions.create.call_args[1]
         messages = call_args["messages"]
         user_message = messages[1]["content"]
-        assert "Original text: 'The sky is blue'" in user_message
-        assert "Masked text: 'The ___ is ____'" in user_message
-        assert "Masked words: ['sky', 'blue']" in user_message
+        assert "Flashcard: 'The ___ is ____'" in user_message
 
     @patch("reprise.openai_client.OPENAI_API_KEY", None)
     def test_evaluate_cloze_quality_no_api_key(self):
