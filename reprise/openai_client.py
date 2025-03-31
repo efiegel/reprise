@@ -81,11 +81,6 @@ def evaluate_cloze_quality(content: str, mask_indices: List[List[int]]) -> bool:
             masked_content[i] = "_"
     masked_content = "".join(masked_content)
 
-    # Extract the masked words
-    masked_words = []
-    for start, end in mask_indices:
-        masked_words.append(content[start : end + 1])
-
     response = client.chat.completions.create(
         model=OPENAI_MODEL,
         messages=[
@@ -93,19 +88,21 @@ def evaluate_cloze_quality(content: str, mask_indices: List[List[int]]) -> bool:
                 "role": "system",
                 "content": """You are an expert in educational flashcard creation. 
                 You are evaluating the quality of a cloze deletion (masked text) flashcard.
-                
-                A good cloze deletion has these properties:
-                1. The masked word(s) can be reasonably inferred from context
-                2. There is a likely single answer in the appropriate context
-                3. The masked content tests important information worth remembering
-                4. The masked content is neither too obvious nor too obscure
-                
-                Determine if this cloze deletion is of good quality.
-                Respond with only 'true' if it's good quality or 'false' if it's poor quality.""",
+                A good cloze deletion has one hallmark quality: there is only one likely answer to fill the blank.
+
+                Examples:
+                "The color of the sky is ____" is quality
+                "The color of the ___ is blue" is not quality
+                "The color of the ___ is ____" is not quality
+                "The _____ of the sky is ____" is not quality
+
+                You will be given a cloze deletion (masked text) flashcard, and you are
+                to determine if it's of good quality. Respond with only 'true' if it's 
+                good quality or 'false' if it's poor quality.""",
             },
             {
                 "role": "user",
-                "content": f"Original text: '{content}'\nMasked text: '{masked_content}'\nMasked words: {masked_words}\n\nIs this cloze deletion of good quality?",
+                "content": f"Flashcard: '{masked_content}'",
             },
         ],
         temperature=0.3,
@@ -153,11 +150,11 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
                 Return your response as a JSON object with a 'cloze_deletion_sets' key containing an array of arrays.
                 Each inner array contains strings representing the words or phrases to mask for that cloze deletion set.
                 
-                For example, if asked to create cloze deletion sets for "The sky is blue and the grass is green":
+                For example, if asked to create cloze deletion sets for "The color of the sky is blue":
                 {{
                   "cloze_deletion_sets": [
-                    ["blue", "green"],
-                    ["sky", "grass"]
+                    ["blue"],
+                    ["color"]
                   ]
                 }}
                 
