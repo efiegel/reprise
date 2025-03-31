@@ -65,8 +65,7 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
 
     Raises:
         ValueError: If the OpenAI API key is not set
-        ValueError: If the response format is invalid
-        Exception: For any OpenAI API errors
+        Exception: For any OpenAI API errors or response parsing errors
     """
     if not OPENAI_API_KEY or not client:
         logger.warning("OpenAI API key not set")
@@ -110,57 +109,23 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
         response_format={"type": "json_object"},
     )
 
-    # Extract the response and parse as JSON
-    result = response.choices[0].message.content
     try:
-        # Parse the JSON response
+        result = response.choices[0].message.content
         mask_data = json.loads(result)
-        if "cloze_deletion_sets" not in mask_data:
-            logger.error(f"Missing cloze_deletion_sets in response: {result}")
-            raise ValueError(
-                "OpenAI response missing required 'cloze_deletion_sets' field"
-            )
-
         cloze_deletion_sets = mask_data["cloze_deletion_sets"]
-
-        # Validate the cloze_deletion_sets
-        if not isinstance(cloze_deletion_sets, list) or not all(
-            isinstance(set_items, list) and all(isinstance(w, str) for w in set_items)
-            for set_items in cloze_deletion_sets
-        ):
-            logger.error(
-                f"Invalid cloze_deletion_sets format from OpenAI: {cloze_deletion_sets}"
-            )
-            raise ValueError(
-                f"Invalid cloze_deletion_sets format: {cloze_deletion_sets}"
-            )
 
         # Find indices for each set of words to mask
         all_mask_tuples = []
         for words_set in cloze_deletion_sets:
-            # Find indices of words to mask for this set
             mask_tuples = find_word_indices(content, words_set)
+            if mask_tuples:
+                all_mask_tuples.append(mask_tuples)
 
-            # If no valid tuples for this set, log a warning but continue
-            if not mask_tuples:
-                logger.warning(f"No valid mask tuples found for words: {words_set}")
-                continue
-
-            # Add the mask tuples to our result
-            all_mask_tuples.append(mask_tuples)
-
-        # If no valid tuples found in any sets, raise an exception
         if not all_mask_tuples:
-            logger.error("No valid mask tuples found in any cloze deletion set")
             raise ValueError("No valid mask tuples found in the content range")
 
         return all_mask_tuples
 
-    except json.JSONDecodeError as e:
-        logger.error(f"Error parsing OpenAI response: {e}. Response: {result}")
-        raise ValueError(f"Invalid JSON in OpenAI response: {e}") from e
-    except (KeyError, TypeError) as e:
-        logger.error(
-            f"Error extracting data from OpenAI response: {e}. Response: {result}"
-        )
-        raise ValueError(f"Error extracting data from OpenAI response: {e}") from e
+    except Exception as e:
+        logger.error(f"Error processing OpenAI response: {e}")
+        raise

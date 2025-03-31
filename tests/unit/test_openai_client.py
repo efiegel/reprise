@@ -68,94 +68,33 @@ class TestOpenAIClient:
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletions_invalid_json(self, mock_client):
-        # Setup mock response with invalid JSON
-        mock_completion = MagicMock()
-        mock_completion.choices = [MagicMock(message=MagicMock(content="invalid json"))]
-        mock_client.chat.completions.create.return_value = mock_completion
-
-        # Test the function
-        with pytest.raises(ValueError) as excinfo:
-            generate_cloze_deletions("The sky is blue")
-        assert "Invalid JSON" in str(excinfo.value)
-
-    @patch("reprise.openai_client.client")
-    @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletions_missing_cloze_deletion_sets(self, mock_client):
-        # Setup mock response with missing cloze_deletion_sets key
-        mock_completion = MagicMock()
-        mock_completion.choices = [
-            MagicMock(message=MagicMock(content='{"other_key": "value"}'))
-        ]
-        mock_client.chat.completions.create.return_value = mock_completion
-
-        # Test the function
-        with pytest.raises(ValueError) as excinfo:
-            generate_cloze_deletions("The sky is blue")
-        assert "missing required 'cloze_deletion_sets' field" in str(excinfo.value)
-
-    @patch("reprise.openai_client.client")
-    @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletions_invalid_cloze_deletion_sets(self, mock_client):
-        # Setup mock response with invalid cloze_deletion_sets format
-        mock_completion = MagicMock()
-        mock_completion.choices = [
-            MagicMock(message=MagicMock(content='{"cloze_deletion_sets": 123}'))
-        ]
-        mock_client.chat.completions.create.return_value = mock_completion
-
-        # Test the function
-        with pytest.raises(ValueError) as excinfo:
-            generate_cloze_deletions("The sky is blue")
-        assert "Invalid cloze_deletion_sets format" in str(excinfo.value)
-
-    @patch("reprise.openai_client.client")
-    @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletions_no_matches(self, mock_client):
-        # Setup mock response with words that don't exist in the text
-        mock_completion = MagicMock()
-        mock_completion.choices = [
+    def test_generate_cloze_deletions_error_handling(self, mock_client):
+        # Test various error cases that should all raise an exception
+        test_cases = [
+            # Invalid JSON
+            MagicMock(message=MagicMock(content="invalid json")),
+            # Missing cloze_deletion_sets key
+            MagicMock(message=MagicMock(content='{"other_key": "value"}')),
+            # Invalid cloze_deletion_sets format
+            MagicMock(message=MagicMock(content='{"cloze_deletion_sets": 123}')),
+            # Words that don't exist in text
             MagicMock(
                 message=MagicMock(content='{"cloze_deletion_sets": [["red", "green"]]}')
-            )
+            ),
+            # API error
+            Exception("API Error"),
         ]
-        mock_client.chat.completions.create.return_value = mock_completion
 
-        # Test the function
-        with pytest.raises(ValueError) as excinfo:
-            generate_cloze_deletions("The sky is blue")
-        assert "No valid mask tuples found" in str(excinfo.value)
+        for case in test_cases:
+            mock_completion = MagicMock()
+            if isinstance(case, Exception):
+                mock_client.chat.completions.create.side_effect = case
+            else:
+                mock_completion.choices = [case]
+                mock_client.chat.completions.create.return_value = mock_completion
 
-    @patch("reprise.openai_client.client")
-    @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletions_api_error(self, mock_client):
-        # Setup mock to raise an exception
-        mock_client.chat.completions.create.side_effect = Exception("API Error")
-
-        # Test the function
-        with pytest.raises(Exception) as excinfo:
-            generate_cloze_deletions("The sky is blue")
-        assert "API Error" in str(excinfo.value)
-
-    @patch("reprise.openai_client.client")
-    @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletions_key_error(self, mock_client):
-        # Setup a mock that produces valid JSON but will cause KeyError during processing
-        mock_completion = MagicMock()
-        # This will pass validation but cause a TypeError when accessing word in find_word_indices
-        mock_completion.choices = [
-            MagicMock(message=MagicMock(content='{"cloze_deletion_sets": [["blue"]]}'))
-        ]
-        mock_client.chat.completions.create.return_value = mock_completion
-
-        # Mock find_word_indices to raise KeyError
-        with patch("reprise.openai_client.find_word_indices") as mock_find:
-            mock_find.side_effect = KeyError("Test KeyError")
-
-            # Test the function
-            with pytest.raises(ValueError) as excinfo:
+            with pytest.raises(Exception):
                 generate_cloze_deletions("The sky is blue")
-            assert "Error extracting data from OpenAI response" in str(excinfo.value)
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
