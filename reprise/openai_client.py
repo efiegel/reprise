@@ -29,21 +29,16 @@ def find_word_indices(text: str, words_to_mask: List[str]) -> List[List[int]]:
     """
     indices = []
     for word in words_to_mask:
-        # For expressions with special characters like 'O(n log n)',
-        # we can't rely on word boundaries, so we check for them separately
-        if re.search(r"[^\w\s]", word):
-            # For expressions with special characters, use direct pattern search
-            pattern = re.escape(word)
-            for match in re.finditer(pattern, text):
-                start, end = match.span()
-                # End index is exclusive in match.span(), but we want inclusive
-                indices.append([start, end - 1])
-        else:
-            # For regular words, use word boundaries to ensure we match complete words
+        # Unless there are special characters, use word boundaries to not match substrings
+        if not re.search(r"[^\w\s]", word):
             pattern = r"\b" + re.escape(word) + r"\b"
             for match in re.finditer(pattern, text):
                 start, end = match.span()
-                # End index is exclusive in match.span(), but we want inclusive
+                indices.append([start, end - 1])
+        else:
+            pattern = re.escape(word)
+            for match in re.finditer(pattern, text):
+                start, end = match.span()
                 indices.append([start, end - 1])
 
     # Sort by start index
