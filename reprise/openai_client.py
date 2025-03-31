@@ -5,7 +5,7 @@ from typing import List
 
 from openai import OpenAI
 
-from reprise.config import OPENAI_API_KEY, OPENAI_MODEL
+from reprise.settings import OPENAI_API_KEY, OPENAI_MODEL
 
 # Configure logging
 logger = logging.getLogger(__name__)
