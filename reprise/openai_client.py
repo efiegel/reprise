@@ -72,7 +72,6 @@ def evaluate_cloze_quality(content: str, mask_indices: List[List[int]]) -> bool:
         Exception: For any OpenAI API errors
     """
     if not OPENAI_API_KEY or not client:
-        logger.warning("OpenAI API key not set")
         raise ValueError("OpenAI API key is required but not provided")
 
     # Create a masked version of the content to show what will be hidden
@@ -87,54 +86,35 @@ def evaluate_cloze_quality(content: str, mask_indices: List[List[int]]) -> bool:
     for start, end in mask_indices:
         masked_words.append(content[start : end + 1])
 
-    try:
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": """You are an expert in educational flashcard creation. 
-                    You are evaluating the quality of a cloze deletion (masked text) flashcard.
-                    
-                    A good cloze deletion has these properties:
-                    1. The masked word(s) can be reasonably inferred from context
-                    2. There is a likely single answer in the appropriate context
-                    3. The masked content tests important information worth remembering
-                    4. The masked content is neither too obvious nor too obscure
-                    
-                    Determine if this cloze deletion is of good quality.
-                    Respond with only 'true' if it's good quality or 'false' if it's poor quality.""",
-                },
-                {
-                    "role": "user",
-                    "content": f"Original text: '{content}'\nMasked text: '{masked_content}'\nMasked words: {masked_words}\n\nIs this cloze deletion of good quality?",
-                },
-            ],
-            temperature=0.3,
-            max_tokens=10,
-        )
+    response = client.chat.completions.create(
+        model=OPENAI_MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": """You are an expert in educational flashcard creation. 
+                You are evaluating the quality of a cloze deletion (masked text) flashcard.
+                
+                A good cloze deletion has these properties:
+                1. The masked word(s) can be reasonably inferred from context
+                2. There is a likely single answer in the appropriate context
+                3. The masked content tests important information worth remembering
+                4. The masked content is neither too obvious nor too obscure
+                
+                Determine if this cloze deletion is of good quality.
+                Respond with only 'true' if it's good quality or 'false' if it's poor quality.""",
+            },
+            {
+                "role": "user",
+                "content": f"Original text: '{content}'\nMasked text: '{masked_content}'\nMasked words: {masked_words}\n\nIs this cloze deletion of good quality?",
+            },
+        ],
+        temperature=0.3,
+        max_tokens=10,
+    )
 
-        # Extract the response and parse as a boolean
-        response_text = response.choices[0].message.content.strip().lower()
-
-        try:
-            if "true" in response_text:
-                return True
-            elif "false" in response_text:
-                return False
-            else:
-                logger.warning(f"Unexpected response format: {response_text}")
-                # Default to False if we can't clearly determine
-                return False
-        except Exception as e:
-            logger.error(
-                f"Error parsing quality evaluation: {e}. Response: {response_text}"
-            )
-            # Default to False if we encounter an error
-            return False
-    except Exception as e:
-        logger.error(f"Error calling OpenAI API: {e}")
-        return False
+    # Extract the response and parse as a boolean
+    response_text = response.choices[0].message.content.strip().lower()
+    return "true" in response_text
 
 
 def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int]]]:
