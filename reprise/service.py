@@ -49,7 +49,7 @@ class Service:
         return reprisals
 
     def cloze_delete_motif(
-        self, motif_uuid: str, n_max: int, evaluate_quality: bool = True
+        self, motif_uuid: str, n_max: int, evaluate_quality: bool = False
     ):
         """
         Create multiple cloze deletions for a motif.
