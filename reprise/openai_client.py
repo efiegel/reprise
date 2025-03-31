@@ -149,20 +149,18 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
                 
                 Return your response as a JSON object with a 'cloze_deletion_sets' key containing an array of arrays.
                 Each inner array contains strings representing the words or phrases to mask for that cloze deletion set.
-                
-                For example, if asked to create cloze deletion sets for "The color of the sky is blue":
+
+                For example, for the text "George Washington was the first president":
                 {{
                   "cloze_deletion_sets": [
-                    ["blue"],
-                    ["color"]
+                    ["George Washington"],
+                    ["first"],
+                    ["president"]
                   ]
                 }}
+                Note how the cloze deletions here represent important qualifiers on relevant information as well, i.e.
+                we did not choose "first president" but instead chose "first" and "president" separately.
                 
-                Thinking again of flashcards, keep in mind that the chosen words or phrases should must be such that they can
-                be reasonably inferrable if the user is shown the remaining text. For example, with the text of
-                "The sky is blue" the word "sky" would not be a good selection because many things are blue. Choose only
-                words or phrases that will make high-quality flashcards. Quality over quantity, even if we just have one flashcard.
-
                 Be precise with your words to ensure they can be found exactly in the text.
                 """,
             },
