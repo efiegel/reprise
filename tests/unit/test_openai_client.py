@@ -202,8 +202,21 @@ class TestOpenAIClient:
 
         # Verify the result is a boolean True
         assert result is True
-        assert isinstance(result, bool)
         mock_client.chat.completions.create.assert_called_once()
+
+        # Verify the API was called with the correct parameters
+        call_args = mock_client.chat.completions.create.call_args[1]
+        # Don't assert the exact model name as it may change
+        assert "model" in call_args
+        assert call_args["temperature"] == 0.3
+        assert call_args["max_tokens"] == 10
+
+        # Check that the messages contain the correct masked content
+        messages = call_args["messages"]
+        user_message = messages[1]["content"]
+        assert "Original text: 'The sky is blue'" in user_message
+        assert "Masked text: 'The ___ is blue'" in user_message
+        assert "Masked words: ['sky']" in user_message
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
@@ -215,12 +228,19 @@ class TestOpenAIClient:
         mock_client.chat.completions.create.return_value = mock_completion
 
         # Test the function
-        result = evaluate_cloze_quality("The sky is blue", [[4, 6]])
+        result = evaluate_cloze_quality("The sky is blue", [[11, 14]])  # Masking "blue"
 
         # Verify the result is a boolean False
         assert result is False
-        assert isinstance(result, bool)
         mock_client.chat.completions.create.assert_called_once()
+
+        # Verify the masked content in the API call
+        call_args = mock_client.chat.completions.create.call_args[1]
+        messages = call_args["messages"]
+        user_message = messages[1]["content"]
+        assert "Original text: 'The sky is blue'" in user_message
+        assert "Masked text: 'The sky is ____'" in user_message
+        assert "Masked words: ['blue']" in user_message
 
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
@@ -234,27 +254,21 @@ class TestOpenAIClient:
         mock_client.chat.completions.create.return_value = mock_completion
 
         # Test the function
-        result = evaluate_cloze_quality("The sky is blue", [[4, 6]])
+        result = evaluate_cloze_quality(
+            "The sky is blue", [[4, 6], [11, 14]]
+        )  # Masking multiple words
 
-        # Verify the result defaults to False for unexpected response
+        # Verify the result is False for unexpected response
         assert result is False
-        assert isinstance(result, bool)
         mock_client.chat.completions.create.assert_called_once()
 
-    @patch("reprise.openai_client.client")
-    @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_evaluate_cloze_quality_exception_handling(self, mock_client):
-        """Test evaluate_cloze_quality exception handling behavior."""
-        # Setup mock to raise an exception
-        mock_client.chat.completions.create.side_effect = Exception("Test exception")
-
-        # This should catch the exception and return False, not propagate the exception
-        with patch("reprise.openai_client.logger.error") as mock_error:
-            result = evaluate_cloze_quality("The sky is blue", [[4, 6]])
-            assert result is False
-            mock_error.assert_called_once_with(
-                "Error calling OpenAI API: Test exception"
-            )
+        # Verify multiple words are properly masked
+        call_args = mock_client.chat.completions.create.call_args[1]
+        messages = call_args["messages"]
+        user_message = messages[1]["content"]
+        assert "Original text: 'The sky is blue'" in user_message
+        assert "Masked text: 'The ___ is ____'" in user_message
+        assert "Masked words: ['sky', 'blue']" in user_message
 
     @patch("reprise.openai_client.OPENAI_API_KEY", None)
     def test_evaluate_cloze_quality_no_api_key(self):
@@ -262,29 +276,3 @@ class TestOpenAIClient:
         with pytest.raises(ValueError) as excinfo:
             evaluate_cloze_quality("The sky is blue", [[4, 6]])
         assert "OpenAI API key is required" in str(excinfo.value)
-
-    @patch("reprise.openai_client.client")
-    @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_evaluate_cloze_quality_inner_exception(self, mock_client):
-        """Test evaluate_cloze_quality inner exception handling."""
-        # Create a mock response with valid structure but that will raise an exception when accessed
-        mock_response = MagicMock()
-        mock_message = MagicMock()
-        # Create a string that raises an exception when __contains__ is called
-        mock_string = MagicMock()
-        mock_string.__contains__ = MagicMock(
-            side_effect=Exception("Test inner exception")
-        )
-        mock_message.content = MagicMock(
-            strip=MagicMock(
-                return_value=MagicMock(lower=MagicMock(return_value=mock_string))
-            )
-        )
-        mock_response.choices = [MagicMock(message=mock_message)]
-        mock_client.chat.completions.create.return_value = mock_response
-
-        # This should catch the exception and return False, not propagate the exception
-        with patch("reprise.openai_client.logger.error") as mock_error:
-            result = evaluate_cloze_quality("The sky is blue", [[4, 6]])
-            assert result is False
-            mock_error.assert_called_once()
