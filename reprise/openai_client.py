@@ -11,7 +11,6 @@ from reprise.settings import OPENAI_API_KEY, OPENAI_MODEL
 logger = logging.getLogger(__name__)
 
 # Only initialize the client if an API key is available
-# This prevents errors during testing
 client = None
 if OPENAI_API_KEY:
     client = OpenAI(api_key=OPENAI_API_KEY)
