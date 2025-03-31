@@ -39,9 +39,12 @@ class TestService:
             assert reprisal.cloze_deletion is not None
 
     @patch("reprise.service.generate_cloze_deletions")
-    def test_add_default_cloze_deletion(self, mock_generate, session):
+    @patch("reprise.service.evaluate_cloze_quality")
+    def test_add_default_cloze_deletion(self, mock_evaluate, mock_generate, session):
         # Mock the OpenAI API call to return a list of mask tuple sets
         mock_generate.return_value = [[[2, 5], [7, 10]], [[12, 15]]]
+        # Mock the quality evaluation to always return True
+        mock_evaluate.return_value = True
 
         motif = motif_factory(session=session).create(content="Test motif content")
         assert len(motif.cloze_deletions) == 0
@@ -51,6 +54,11 @@ class TestService:
 
         # Verify the OpenAI client was called with the motif content
         mock_generate.assert_called_once_with(content=motif.content, n_max=1)
+
+        # Verify evaluate_cloze_quality was called for each set
+        assert mock_evaluate.call_count == 2
+        mock_evaluate.assert_any_call(motif.content, [[2, 5], [7, 10]])
+        mock_evaluate.assert_any_call(motif.content, [[12, 15]])
 
         # Verify the cloze deletion was created with the mocked mask tuples
         assert len(cloze_deletions) == 2
@@ -82,3 +90,55 @@ class TestService:
             service.cloze_delete_motif(motif.uuid, n_max=1)
 
         assert "API Error" in str(excinfo.value)
+
+    @patch("reprise.service.generate_cloze_deletions")
+    @patch("reprise.service.evaluate_cloze_quality")
+    def test_add_cloze_deletion_with_quality_evaluation(
+        self, mock_evaluate, mock_generate, session
+    ):
+        """Test cloze_delete_motif with quality evaluation enabled."""
+        # Setup mocks
+        mock_generate.return_value = [[[2, 5], [7, 10]], [[12, 15]]]
+        # First mask tuple set is good quality, second is not
+        mock_evaluate.side_effect = [True, False]
+
+        motif = motif_factory(session=session).create(content="Test motif content")
+        service = Service(session)
+
+        # Call with quality evaluation enabled (default)
+        cloze_deletions = service.cloze_delete_motif(motif.uuid, n_max=1)
+
+        # Verify evaluate_cloze_quality was called for each mask tuple set
+        assert mock_evaluate.call_count == 2
+        mock_evaluate.assert_any_call(motif.content, [[2, 5], [7, 10]])
+        mock_evaluate.assert_any_call(motif.content, [[12, 15]])
+
+        # Only the high-quality set should have been saved
+        assert len(cloze_deletions) == 1
+        assert cloze_deletions[0].mask_tuples == [[2, 5], [7, 10]]
+
+    @patch("reprise.service.generate_cloze_deletions")
+    @patch("reprise.service.evaluate_cloze_quality")
+    def test_add_cloze_deletion_without_quality_evaluation(
+        self, mock_evaluate, mock_generate, session
+    ):
+        """Test cloze_delete_motif with quality evaluation disabled."""
+        # Setup mocks
+        mock_generate.return_value = [[[2, 5], [7, 10]], [[12, 15]]]
+
+        motif = motif_factory(session=session).create(content="Test motif content")
+        service = Service(session)
+
+        # Call with quality evaluation disabled
+        cloze_deletions = service.cloze_delete_motif(
+            motif.uuid, n_max=1, evaluate_quality=False
+        )
+
+        # Verify evaluate_cloze_quality was NOT called
+        mock_evaluate.assert_not_called()
+
+        # All mask tuple sets should have been saved
+        assert len(cloze_deletions) == 2
+        mask_tuples_list = [cd.mask_tuples for cd in cloze_deletions]
+        assert [[2, 5], [7, 10]] in mask_tuples_list
+        assert [[12, 15]] in mask_tuples_list
