@@ -7,7 +7,6 @@ from openai import OpenAI
 
 from reprise.settings import OPENAI_API_KEY, OPENAI_MODEL
 
-# Configure logging
 logger = logging.getLogger(__name__)
 
 
@@ -120,18 +119,18 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
         mask_data = json.loads(result)
         cloze_deletion_sets = mask_data["cloze_deletion_sets"]
 
-        # Find indices for each set of words to mask
-        all_mask_tuples = []
-        for words_set in cloze_deletion_sets:
-            mask_tuples = find_word_indices(content, words_set)
-            if mask_tuples:
-                all_mask_tuples.append(mask_tuples)
-
-        if not all_mask_tuples:
-            raise ValueError("No valid mask tuples found in the content range")
-
-        return all_mask_tuples
-
     except Exception as e:
-        logger.error(f"Error processing OpenAI response: {e}")
+        logger.error(f"Error calling OpenAI: {e}")
         raise OpenAIError(f"Failed to generate cloze deletions: {str(e)}") from e
+
+    # Find indices for each set of words to mask
+    all_mask_tuples = []
+    for words_set in cloze_deletion_sets:
+        mask_tuples = find_word_indices(content, words_set)
+        if mask_tuples:
+            all_mask_tuples.append(mask_tuples)
+
+    if len(cloze_deletion_sets) != len(all_mask_tuples):
+        raise OpenAIError("Invalid cloze deletion generation")
+
+    return all_mask_tuples

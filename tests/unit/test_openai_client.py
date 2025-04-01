@@ -97,3 +97,12 @@ class TestOpenAIClient:
         assert result[0] == [[4, 6]]
         assert result[1] == [[11, 14]]
         assert result[2] == [[8, 9]]
+
+    def test_generate_cloze_deletions_invalid_response(self, mock_openai_client):
+        mock_chat_completion_response(
+            mock_openai_client, '{"cloze_deletion_sets": [["apples"]]}'
+        )
+
+        with pytest.raises(OpenAIError) as excinfo:
+            generate_cloze_deletions("The sky is blue")
+        assert "Invalid cloze deletion generation" in str(excinfo.value)
