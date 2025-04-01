@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 from flask import json
 
@@ -95,13 +93,13 @@ class TestAPI:
             assert motif.content == motif_with_citation_data["content"]
             assert motif.citation.title == motif_with_citation_data["citation"]
 
-    @patch("reprise.openai_client.client.chat.completions.create")
     def test_add_motif_with_auto_cloze_deletions(
-        self, mock_openai, client, motif_with_auto_cloze_deletions_data
+        self, mock_openai_client, client, motif_with_auto_cloze_deletions_data
     ):
         # Mock the OpenAI response to return specific mask tuple sets
-        mock_openai.return_value = mock_chat_completion_response(
-            '{"cloze_deletion_sets": [["Test"], ["Test", "content"]]}'
+        mock_chat_completion_response(
+            mock_openai_client,
+            '{"cloze_deletion_sets": [["Test"], ["Test", "content"]]}',
         )
 
         response = client.post(
@@ -415,12 +413,11 @@ class TestAPI:
 
         assert response.status_code == 400
 
-    @patch("reprise.openai_client.client.chat.completions.create")
     def test_add_motif_with_openai_error(
-        self, mock_openai, client, motif_with_auto_cloze_deletions_data
+        self, mock_openai_client, client, motif_with_auto_cloze_deletions_data
     ):
         # Mock the OpenAI API call to raise an exception
-        mock_openai.side_effect = Exception("OpenAI API Error")
+        mock_openai_client.side_effect = Exception("OpenAI API Error")
 
         response = client.post(
             "/motifs",

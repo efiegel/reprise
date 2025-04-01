@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 
 from reprise.service import Service
@@ -67,10 +65,9 @@ class TestService:
         assert [[0, 16]] in mask_tuples_list
         assert [[0, 5], [32, 40]] in mask_tuples_list
 
-    @patch("reprise.openai_client.client.chat.completions.create")
-    def test_generate_cloze_deletion_fallback(self, mock_openai, session):
+    def test_generate_cloze_deletion_fallback(self, mock_openai_client, session):
         # Mock the OpenAI API call to raise an exception
-        mock_openai.side_effect = Exception("API Error")
+        mock_openai_client.side_effect = Exception("API Error")
 
         motif = motif_factory(session=session).create()
         assert len(motif.cloze_deletions) == 0

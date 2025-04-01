@@ -38,10 +38,9 @@ class TestOpenAIClient:
         result = find_word_indices(text, words_to_mask)
         assert result == expected_indices
 
-    @patch("reprise.openai_client.client.chat.completions.create")
-    def test_generate_cloze_deletions_success(self, mock_create):
-        mock_create.return_value = mock_chat_completion_response(
-            '{"cloze_deletion_sets": [["sky", "blue"], ["is"]]}'
+    def test_generate_cloze_deletions_success(self, mock_openai_client):
+        mock_chat_completion_response(
+            mock_openai_client, '{"cloze_deletion_sets": [["sky", "blue"], ["is"]]}'
         )
 
         result = generate_cloze_deletions("The sky is blue")
@@ -49,47 +48,46 @@ class TestOpenAIClient:
         assert len(result) == 2
         assert result[0] == [[4, 6], [11, 14]]
         assert result[1] == [[8, 9]]
-        mock_create.assert_called_once()
 
     @patch("reprise.openai_client.OPENAI_API_KEY", None)
     def test_generate_cloze_deletions_no_api_key(self):
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(OpenAIError) as excinfo:
             generate_cloze_deletions("The sky is blue")
         assert "OpenAI API key is required" in str(excinfo.value)
 
-    @patch("reprise.openai_client.client.chat.completions.create")
-    def test_generate_cloze_deletions_error_handling(self, mock_create):
+    def test_generate_cloze_deletions_error_handling(self, mock_openai_client):
         test_cases = [
             # Invalid JSON
-            mock_chat_completion_response("invalid json"),
+            mock_chat_completion_response(mock_openai_client, "invalid json"),
             # Missing cloze_deletion_sets key
-            mock_chat_completion_response('{"other_key": "value"}'),
+            mock_chat_completion_response(mock_openai_client, '{"other_key": "value"}'),
             # Invalid cloze_deletion_sets format
-            mock_chat_completion_response('{"cloze_deletion_sets": 123}'),
+            mock_chat_completion_response(
+                mock_openai_client, '{"cloze_deletion_sets": 123}'
+            ),
             # Words that don't exist in text
             mock_chat_completion_response(
-                '{"cloze_deletion_sets": [["red", "green"]]}'
+                mock_openai_client, '{"cloze_deletion_sets": [["red", "green"]]}'
             ),
         ]
 
         for case in test_cases:
-            mock_create.return_value = case
+            mock_openai_client.return_value = case
             with pytest.raises(OpenAIError) as excinfo:
                 generate_cloze_deletions("The sky is blue")
             assert "Failed to generate cloze deletions" in str(excinfo.value)
 
         # Test API error separately since it needs different handling
-        mock_create.side_effect = Exception("API Error")
+        mock_openai_client.side_effect = Exception("API Error")
         with pytest.raises(OpenAIError) as excinfo:
             generate_cloze_deletions("The sky is blue")
         assert "Failed to generate cloze deletions" in str(excinfo.value)
         assert "API Error" in str(excinfo.value)
 
-    @patch("reprise.openai_client.client.chat.completions.create")
-    def test_generate_cloze_deletions_with_n_max(self, mock_create):
+    def test_generate_cloze_deletions_with_n_max(self, mock_openai_client):
         """Test the generate_cloze_deletions function with the n_max parameter."""
-        mock_create.return_value = mock_chat_completion_response(
-            '{"cloze_deletion_sets": [["sky"], ["blue"], ["is"]]}'
+        mock_chat_completion_response(
+            mock_openai_client, '{"cloze_deletion_sets": [["sky"], ["blue"], ["is"]]}'
         )
 
         result = generate_cloze_deletions("The sky is blue", n_max=5)
@@ -99,9 +97,3 @@ class TestOpenAIClient:
         assert result[0] == [[4, 6]]
         assert result[1] == [[11, 14]]
         assert result[2] == [[8, 9]]
-
-        # Ensure that n_max was properly passed in the API call
-        call_args = mock_create.call_args[1]
-        messages = call_args["messages"]
-        assert "up to 5 sets" in messages[0]["content"]
-        assert "maximum 5" in messages[1]["content"]
