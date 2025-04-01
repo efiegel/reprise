@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -40,12 +40,9 @@ class TestService:
             assert reprisal.cloze_deletion is not None
 
     def test_generate_cloze_deletion(self, mock_openai_client, session):
-        # Set up the mock client
-        mock_client = MagicMock()
-        mock_client.chat.completions.create.return_value = mock_chat_completion_response(
+        mock_openai_client.return_value = mock_chat_completion_response(
             '{"cloze_deletion_sets": [["George Washington"], ["George", "president"]]}'
         )
-        mock_openai_client.return_value = mock_client
 
         motif_content = "George Washington was the first president"
         motif = motif_factory(session=session).create(content=motif_content)
