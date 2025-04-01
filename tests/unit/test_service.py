@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -38,25 +38,29 @@ class TestService:
         for reprisal in reprisals:
             assert reprisal.cloze_deletion is not None
 
-    @patch("reprise.service.generate_cloze_deletions")
-    def test_generate_cloze_deletion(self, mock_generate, session):
-        # Mock the OpenAI API call to return a list of mask tuple sets
-        mock_generate.return_value = [[[2, 5], [7, 10]], [[12, 15]]]
-
-        motif = motif_factory(session=session).create(content="Test motif content")
+    @patch("reprise.openai_client.client.chat.completions.create")
+    def test_generate_cloze_deletion(self, mock_openai, session):
+        motif_content = "George Washington was the first president"
+        motif = motif_factory(session=session).create(content=motif_content)
         assert len(motif.cloze_deletions) == 0
 
-        service = Service(session)
-        cloze_deletions = service.cloze_delete_motif(motif.uuid, n_max=1)
+        # Mock the OpenAI API call to return the expected response
+        response = MagicMock()
+        response.choices[
+            0
+        ].message.content = (
+            '{"cloze_deletion_sets": [["George Washington"], ["George", "president"]]}'
+        )
+        mock_openai.return_value = response
 
-        # Verify the OpenAI client was called with the motif content
-        mock_generate.assert_called_once_with(content=motif.content, n_max=1)
+        service = Service(session)
+        cloze_deletions = service.cloze_delete_motif(motif.uuid, n_max=2)
 
         # Verify the cloze deletion was created with the mocked mask tuples
         assert len(cloze_deletions) == 2
-        assert cloze_deletions[0].mask_tuples == [[2, 5], [7, 10]]
+        assert cloze_deletions[0].mask_tuples == [[0, 16]]
         assert cloze_deletions[0].motif_uuid == motif.uuid
-        assert cloze_deletions[1].mask_tuples == [[12, 15]]
+        assert cloze_deletions[1].mask_tuples == [[0, 5], [32, 40]]
         assert cloze_deletions[1].motif_uuid == motif.uuid
 
         # Check that the motif now has both cloze deletions
@@ -64,8 +68,8 @@ class TestService:
         assert len(motif.cloze_deletions) == 2
         # The order might not be guaranteed, so we'll check both possibilities
         mask_tuples_list = [cd.mask_tuples for cd in motif.cloze_deletions]
-        assert [[2, 5], [7, 10]] in mask_tuples_list
-        assert [[12, 15]] in mask_tuples_list
+        assert [[0, 16]] in mask_tuples_list
+        assert [[0, 5], [32, 40]] in mask_tuples_list
 
     @patch("reprise.service.generate_cloze_deletions")
     def test_generate_cloze_deletion_fallback(self, mock_generate, session):
