@@ -10,6 +10,13 @@ from reprise.settings import OPENAI_API_KEY, OPENAI_MODEL
 # Configure logging
 logger = logging.getLogger(__name__)
 
+
+class OpenAIException(Exception):
+    """Exception raised for OpenAI API related errors."""
+
+    pass
+
+
 # Only initialize the client if an API key is available
 client = None
 if OPENAI_API_KEY:
@@ -71,45 +78,45 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
         logger.warning("OpenAI API key not set")
         raise ValueError("OpenAI API key is required but not provided")
 
-    response = client.chat.completions.create(
-        model=OPENAI_MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": f"""You are a helpful assistant that creates cloze deletions for learning purposes.
-                Given a text, create an appropriate number of different cloze deletion sets (up to {n_max} sets) 
-                where each set masks different important words or phrases that are important to learn. For example,
-                think of this as making flashcards for the text. Make as many as appropriate to learn the important
-                information, but do not exceed {n_max} sets.
-                
-                Return your response as a JSON object with a 'cloze_deletion_sets' key containing an array of arrays.
-                Each inner array contains strings representing the words or phrases to mask for that cloze deletion set.
-
-                For example, for the text "George Washington was the first president":
-                {{
-                  "cloze_deletion_sets": [
-                    ["George Washington"],
-                    ["first"],
-                    ["president"]
-                  ]
-                }}
-                Note how the cloze deletions here represent important qualifiers on relevant information as well, i.e.
-                we did not choose "first president" but instead chose "first" and "president" separately.
-                
-                Be precise with your words to ensure they can be found exactly in the text.
-                """,
-            },
-            {
-                "role": "user",
-                "content": f"Create appropriate cloze deletion sets (maximum {n_max}) for: '{content}'",
-            },
-        ],
-        temperature=0.7,
-        max_tokens=250,
-        response_format={"type": "json_object"},
-    )
-
     try:
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"""You are a helpful assistant that creates cloze deletions for learning purposes.
+                    Given a text, create an appropriate number of different cloze deletion sets (up to {n_max} sets) 
+                    where each set masks different important words or phrases that are important to learn. For example,
+                    think of this as making flashcards for the text. Make as many as appropriate to learn the important
+                    information, but do not exceed {n_max} sets.
+                    
+                    Return your response as a JSON object with a 'cloze_deletion_sets' key containing an array of arrays.
+                    Each inner array contains strings representing the words or phrases to mask for that cloze deletion set.
+
+                    For example, for the text "George Washington was the first president":
+                    {{
+                      "cloze_deletion_sets": [
+                        ["George Washington"],
+                        ["first"],
+                        ["president"]
+                      ]
+                    }}
+                    Note how the cloze deletions here represent important qualifiers on relevant information as well, i.e.
+                    we did not choose "first president" but instead chose "first" and "president" separately.
+                    
+                    Be precise with your words to ensure they can be found exactly in the text.
+                    """,
+                },
+                {
+                    "role": "user",
+                    "content": f"Create appropriate cloze deletion sets (maximum {n_max}) for: '{content}'",
+                },
+            ],
+            temperature=0.7,
+            max_tokens=250,
+            response_format={"type": "json_object"},
+        )
+
         result = response.choices[0].message.content
         mask_data = json.loads(result)
         cloze_deletion_sets = mask_data["cloze_deletion_sets"]
@@ -128,4 +135,4 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
 
     except Exception as e:
         logger.error(f"Error processing OpenAI response: {e}")
-        raise
+        raise OpenAIException(f"Failed to generate cloze deletions: {str(e)}") from e

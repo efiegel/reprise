@@ -3,6 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from reprise.openai_client import (
+    OpenAIException,
     find_word_indices,
     generate_cloze_deletions,
 )
@@ -69,18 +70,20 @@ class TestOpenAIClient:
             mock_chat_completion_response(
                 '{"cloze_deletion_sets": [["red", "green"]]}'
             ),
-            # API error
-            Exception("API Error"),
         ]
 
         for case in test_cases:
-            if isinstance(case, Exception):
-                mock_create.side_effect = case
-            else:
-                mock_create.return_value = case
-
-            with pytest.raises(Exception):
+            mock_create.return_value = case
+            with pytest.raises(OpenAIException) as excinfo:
                 generate_cloze_deletions("The sky is blue")
+            assert "Failed to generate cloze deletions" in str(excinfo.value)
+
+        # Test API error separately since it needs different handling
+        mock_create.side_effect = Exception("API Error")
+        with pytest.raises(OpenAIException) as excinfo:
+            generate_cloze_deletions("The sky is blue")
+        assert "Failed to generate cloze deletions" in str(excinfo.value)
+        assert "API Error" in str(excinfo.value)
 
     @patch("reprise.openai_client.client.chat.completions.create")
     def test_generate_cloze_deletions_with_n_max(self, mock_create):
