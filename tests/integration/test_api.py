@@ -31,6 +31,10 @@ class TestAPI:
         return {"content": "Test motif content", "citation": "Test citation"}
 
     @pytest.fixture
+    def motif_with_auto_cloze_deletions_data(self):
+        return {"content": "Test motif content", "auto_generate_cloze_deletions": True}
+
+    @pytest.fixture
     def citation_data(self):
         return {"title": "Test citation title"}
 
@@ -56,13 +60,7 @@ class TestAPI:
             {"uuid": cloze_deletion.uuid, "mask_tuples": cloze_deletion.mask_tuples}
         ]
 
-    @patch("reprise.openai_client.client.chat.completions.create")
-    def test_add_motif_without_citation(self, mock_openai, client, motif_data):
-        # Mock the OpenAI response to return specific mask tuple sets
-        mock_openai.return_value = mock_chat_completion_response(
-            '{"cloze_deletion_sets": [["Test"], ["Test", "content"]]}'
-        )
-
+    def test_add_motif_without_citation(self, client, motif_data):
         response = client.post(
             "/motifs",
             data=json.dumps(motif_data),
@@ -73,30 +71,13 @@ class TestAPI:
         assert response.status_code == 200
         assert data["content"] == motif_data["content"]
         assert data["citation"] is None
-
-        assert data["cloze_deletions"] is not None
-        assert len(data["cloze_deletions"]) == 2
-        assert data["cloze_deletions"][0]["mask_tuples"] == [[0, 3]]
-        assert data["cloze_deletions"][1]["mask_tuples"] == [[0, 3], [11, 17]]
+        assert data["cloze_deletions"] is None
 
         with database_session() as session:
             motif = session.query(Motif).filter_by(uuid=data["uuid"]).one_or_none()
             assert motif.content == motif_data["content"]
-            assert len(motif.cloze_deletions) == 2
-            # The order might not be guaranteed, so check both ways
-            mask_tuples_list = [cd.mask_tuples for cd in motif.cloze_deletions]
-            assert [[0, 3]] in mask_tuples_list
-            assert [[0, 3], [11, 17]] in mask_tuples_list
 
-    @patch("reprise.openai_client.client.chat.completions.create")
-    def test_add_motif_with_citation(
-        self, mock_openai, client, motif_with_citation_data
-    ):
-        # Mock the OpenAI response to return specific mask tuple sets
-        mock_openai.return_value = mock_chat_completion_response(
-            '{"cloze_deletion_sets": [["Test"], ["Test", "content"]]}'
-        )
-
+    def test_add_motif_with_citation(self, client, motif_with_citation_data):
         response = client.post(
             "/motifs",
             data=json.dumps(motif_with_citation_data),
@@ -107,6 +88,30 @@ class TestAPI:
         assert response.status_code == 200
         assert data["content"] == motif_with_citation_data["content"]
         assert data["citation"] == motif_with_citation_data["citation"]
+        assert data["cloze_deletions"] is None
+
+        with database_session() as session:
+            motif = session.query(Motif).filter_by(uuid=data["uuid"]).one_or_none()
+            assert motif.content == motif_with_citation_data["content"]
+            assert motif.citation.title == motif_with_citation_data["citation"]
+
+    @patch("reprise.openai_client.client.chat.completions.create")
+    def test_add_motif_with_auto_cloze_deletions(
+        self, mock_openai, client, motif_with_auto_cloze_deletions_data
+    ):
+        # Mock the OpenAI response to return specific mask tuple sets
+        mock_openai.return_value = mock_chat_completion_response(
+            '{"cloze_deletion_sets": [["Test"], ["Test", "content"]]}'
+        )
+
+        response = client.post(
+            "/motifs",
+            data=json.dumps(motif_with_auto_cloze_deletions_data),
+            content_type="application/json",
+        )
+
+        data = json.loads(response.data)
+        assert response.status_code == 200
         assert data["cloze_deletions"] is not None
         assert len(data["cloze_deletions"]) == 2
         assert data["cloze_deletions"][0]["mask_tuples"] == [[0, 3]]
@@ -114,8 +119,6 @@ class TestAPI:
 
         with database_session() as session:
             motif = session.query(Motif).filter_by(uuid=data["uuid"]).one_or_none()
-            assert motif.content == motif_with_citation_data["content"]
-            assert motif.citation.title == motif_with_citation_data["citation"]
             assert len(motif.cloze_deletions) == 2
             # The order might not be guaranteed, so check both ways
             mask_tuples_list = [cd.mask_tuples for cd in motif.cloze_deletions]
@@ -413,13 +416,15 @@ class TestAPI:
         assert response.status_code == 400
 
     @patch("reprise.openai_client.client.chat.completions.create")
-    def test_add_motif_with_openai_error(self, mock_openai, client, motif_data):
+    def test_add_motif_with_openai_error(
+        self, mock_openai, client, motif_with_auto_cloze_deletions_data
+    ):
         # Mock the OpenAI API call to raise an exception
         mock_openai.side_effect = Exception("OpenAI API Error")
 
         response = client.post(
             "/motifs",
-            data=json.dumps(motif_data),
+            data=json.dumps(motif_with_auto_cloze_deletions_data),
             content_type="application/json",
         )
 
