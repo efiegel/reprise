@@ -37,13 +37,11 @@ class TestOpenAIClient:
         result = find_word_indices(text, words_to_mask)
         assert result == expected_indices
 
-    @patch("reprise.openai_client.client")
+    @patch("reprise.openai_client.client.chat.completions.create")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletions_success(self, mock_client):
-        mock_client.chat.completions.create.return_value = (
-            mock_chat_completion_response(
-                '{"cloze_deletion_sets": [["sky", "blue"], ["is"]]}'
-            )
+    def test_generate_cloze_deletions_success(self, mock_create):
+        mock_create.return_value = mock_chat_completion_response(
+            '{"cloze_deletion_sets": [["sky", "blue"], ["is"]]}'
         )
 
         result = generate_cloze_deletions("The sky is blue")
@@ -51,7 +49,7 @@ class TestOpenAIClient:
         assert len(result) == 2
         assert result[0] == [[4, 6], [11, 14]]
         assert result[1] == [[8, 9]]
-        mock_client.chat.completions.create.assert_called_once()
+        mock_create.assert_called_once()
 
     @patch("reprise.openai_client.OPENAI_API_KEY", None)
     def test_generate_cloze_deletions_no_api_key(self):
@@ -59,9 +57,9 @@ class TestOpenAIClient:
             generate_cloze_deletions("The sky is blue")
         assert "OpenAI API key is required" in str(excinfo.value)
 
-    @patch("reprise.openai_client.client")
+    @patch("reprise.openai_client.client.chat.completions.create")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletions_error_handling(self, mock_client):
+    def test_generate_cloze_deletions_error_handling(self, mock_create):
         test_cases = [
             # Invalid JSON
             mock_chat_completion_response("invalid json"),
@@ -79,21 +77,19 @@ class TestOpenAIClient:
 
         for case in test_cases:
             if isinstance(case, Exception):
-                mock_client.chat.completions.create.side_effect = case
+                mock_create.side_effect = case
             else:
-                mock_client.chat.completions.create.return_value = case
+                mock_create.return_value = case
 
             with pytest.raises(Exception):
                 generate_cloze_deletions("The sky is blue")
 
-    @patch("reprise.openai_client.client")
+    @patch("reprise.openai_client.client.chat.completions.create")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
-    def test_generate_cloze_deletions_with_n_max(self, mock_client):
+    def test_generate_cloze_deletions_with_n_max(self, mock_create):
         """Test the generate_cloze_deletions function with the n_max parameter."""
-        mock_client.chat.completions.create.return_value = (
-            mock_chat_completion_response(
-                '{"cloze_deletion_sets": [["sky"], ["blue"], ["is"]]}'
-            )
+        mock_create.return_value = mock_chat_completion_response(
+            '{"cloze_deletion_sets": [["sky"], ["blue"], ["is"]]}'
         )
 
         result = generate_cloze_deletions("The sky is blue", n_max=5)
@@ -105,7 +101,7 @@ class TestOpenAIClient:
         assert result[2] == [[8, 9]]
 
         # Ensure that n_max was properly passed in the API call
-        call_args = mock_client.chat.completions.create.call_args[1]
+        call_args = mock_create.call_args[1]
         messages = call_args["messages"]
         assert "up to 5 sets" in messages[0]["content"]
         assert "maximum 5" in messages[1]["content"]
