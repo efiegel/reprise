@@ -82,6 +82,7 @@ def create_motif(body: MotifCreate) -> Dict[str, Any]:
             service.cloze_delete_motif(motif.uuid, n_max=2)
         except Exception as e:
             app.logger.error(f"Error generating cloze deletions: {e}")
+            return jsonify({"error": str(e)}), 500
 
         # Refresh motif to incorporate cloze deletions
         session.refresh(motif)
