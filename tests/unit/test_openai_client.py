@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -6,6 +6,7 @@ from reprise.openai_client import (
     find_word_indices,
     generate_cloze_deletions,
 )
+from tests.utils import mock_chat_completion_response
 
 
 class TestOpenAIClient:
@@ -39,15 +40,11 @@ class TestOpenAIClient:
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
     def test_generate_cloze_deletions_success(self, mock_client):
-        mock_completion = MagicMock()
-        mock_completion.choices = [
-            MagicMock(
-                message=MagicMock(
-                    content='{"cloze_deletion_sets": [["sky", "blue"], ["is"]]}'
-                )
+        mock_client.chat.completions.create.return_value = (
+            mock_chat_completion_response(
+                '{"cloze_deletion_sets": [["sky", "blue"], ["is"]]}'
             )
-        ]
-        mock_client.chat.completions.create.return_value = mock_completion
+        )
 
         result = generate_cloze_deletions("The sky is blue")
 
@@ -67,26 +64,24 @@ class TestOpenAIClient:
     def test_generate_cloze_deletions_error_handling(self, mock_client):
         test_cases = [
             # Invalid JSON
-            MagicMock(message=MagicMock(content="invalid json")),
+            mock_chat_completion_response("invalid json"),
             # Missing cloze_deletion_sets key
-            MagicMock(message=MagicMock(content='{"other_key": "value"}')),
+            mock_chat_completion_response('{"other_key": "value"}'),
             # Invalid cloze_deletion_sets format
-            MagicMock(message=MagicMock(content='{"cloze_deletion_sets": 123}')),
+            mock_chat_completion_response('{"cloze_deletion_sets": 123}'),
             # Words that don't exist in text
-            MagicMock(
-                message=MagicMock(content='{"cloze_deletion_sets": [["red", "green"]]}')
+            mock_chat_completion_response(
+                '{"cloze_deletion_sets": [["red", "green"]]}'
             ),
             # API error
             Exception("API Error"),
         ]
 
         for case in test_cases:
-            mock_completion = MagicMock()
             if isinstance(case, Exception):
                 mock_client.chat.completions.create.side_effect = case
             else:
-                mock_completion.choices = [case]
-                mock_client.chat.completions.create.return_value = mock_completion
+                mock_client.chat.completions.create.return_value = case
 
             with pytest.raises(Exception):
                 generate_cloze_deletions("The sky is blue")
@@ -95,15 +90,11 @@ class TestOpenAIClient:
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
     def test_generate_cloze_deletions_with_n_max(self, mock_client):
         """Test the generate_cloze_deletions function with the n_max parameter."""
-        mock_completion = MagicMock()
-        mock_completion.choices = [
-            MagicMock(
-                message=MagicMock(
-                    content='{"cloze_deletion_sets": [["sky"], ["blue"], ["is"]]}'
-                )
+        mock_client.chat.completions.create.return_value = (
+            mock_chat_completion_response(
+                '{"cloze_deletion_sets": [["sky"], ["blue"], ["is"]]}'
             )
-        ]
-        mock_client.chat.completions.create.return_value = mock_completion
+        )
 
         result = generate_cloze_deletions("The sky is blue", n_max=5)
 
