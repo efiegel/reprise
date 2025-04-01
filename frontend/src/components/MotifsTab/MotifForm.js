@@ -7,18 +7,25 @@ import {
   Select,
   InputLabel,
   FormControl,
+  Switch,
 } from "@mui/material";
 import { motifService } from "../../services/motifService";
 
 export default function MotifForm({ citations, onMotifAdded }) {
   const [newMotifContent, setNewMotifContent] = useState("");
   const [selectedCitation, setSelectedCitation] = useState("");
+  const [autoGenerateClozeDeletions, setAutoGenerateClozeDeletions] =
+    useState(true);
 
   const handleAddMotif = () => {
     if (!newMotifContent.trim()) return;
 
     motifService
-      .createMotif(newMotifContent, selectedCitation)
+      .createMotif(
+        newMotifContent,
+        selectedCitation,
+        autoGenerateClozeDeletions
+      )
       .then((data) => {
         onMotifAdded(data);
         setNewMotifContent("");
@@ -66,9 +73,19 @@ export default function MotifForm({ citations, onMotifAdded }) {
           ))}
         </Select>
       </FormControl>
-      <Button variant="contained" color="primary" onClick={handleAddMotif}>
-        Add Motif
-      </Button>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+        <Button variant="contained" color="primary" onClick={handleAddMotif}>
+          Add Motif
+        </Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Switch
+            checked={autoGenerateClozeDeletions}
+            onChange={(e) => setAutoGenerateClozeDeletions(e.target.checked)}
+            color="primary"
+          />
+          <span style={{ color: "gray" }}>Auto-generate cloze deletions</span>
+        </Box>
+      </Box>
     </Box>
   );
 }
