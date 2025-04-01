@@ -11,7 +11,7 @@ from reprise.settings import OPENAI_API_KEY, OPENAI_MODEL
 logger = logging.getLogger(__name__)
 
 
-class OpenAIException(Exception):
+class OpenAIError(Exception):
     """Exception raised for OpenAI API related errors."""
 
     pass
@@ -135,4 +135,4 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
 
     except Exception as e:
         logger.error(f"Error processing OpenAI response: {e}")
-        raise OpenAIException(f"Failed to generate cloze deletions: {str(e)}") from e
+        raise OpenAIError(f"Failed to generate cloze deletions: {str(e)}") from e

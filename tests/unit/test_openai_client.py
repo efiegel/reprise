@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from reprise.openai_client import (
-    OpenAIException,
+    OpenAIError,
     find_word_indices,
     generate_cloze_deletions,
 )
@@ -74,13 +74,13 @@ class TestOpenAIClient:
 
         for case in test_cases:
             mock_create.return_value = case
-            with pytest.raises(OpenAIException) as excinfo:
+            with pytest.raises(OpenAIError) as excinfo:
                 generate_cloze_deletions("The sky is blue")
             assert "Failed to generate cloze deletions" in str(excinfo.value)
 
         # Test API error separately since it needs different handling
         mock_create.side_effect = Exception("API Error")
-        with pytest.raises(OpenAIException) as excinfo:
+        with pytest.raises(OpenAIError) as excinfo:
             generate_cloze_deletions("The sky is blue")
         assert "Failed to generate cloze deletions" in str(excinfo.value)
         assert "API Error" in str(excinfo.value)
