@@ -1,9 +1,10 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from reprise.service import Service
 from tests.factories import cloze_deletion_factory, motif_factory
+from tests.utils import mock_chat_completion_response
 
 
 class TestService:
@@ -45,13 +46,9 @@ class TestService:
         assert len(motif.cloze_deletions) == 0
 
         # Mock the OpenAI API call to return the expected response
-        response = MagicMock()
-        response.choices[
-            0
-        ].message.content = (
+        mock_openai.return_value = mock_chat_completion_response(
             '{"cloze_deletion_sets": [["George Washington"], ["George", "president"]]}'
         )
-        mock_openai.return_value = response
 
         service = Service(session)
         cloze_deletions = service.cloze_delete_motif(motif.uuid, n_max=2)
