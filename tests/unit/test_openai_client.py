@@ -39,7 +39,6 @@ class TestOpenAIClient:
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
     def test_generate_cloze_deletions_success(self, mock_client):
-        # Setup mock chat completions
         mock_completion = MagicMock()
         mock_completion.choices = [
             MagicMock(
@@ -50,10 +49,8 @@ class TestOpenAIClient:
         ]
         mock_client.chat.completions.create.return_value = mock_completion
 
-        # Test the function
         result = generate_cloze_deletions("The sky is blue")
 
-        # Verify the result
         assert len(result) == 2
         assert result[0] == [[4, 6], [11, 14]]
         assert result[1] == [[8, 9]]
@@ -61,7 +58,6 @@ class TestOpenAIClient:
 
     @patch("reprise.openai_client.OPENAI_API_KEY", None)
     def test_generate_cloze_deletions_no_api_key(self):
-        # Test when API key is not provided
         with pytest.raises(ValueError) as excinfo:
             generate_cloze_deletions("The sky is blue")
         assert "OpenAI API key is required" in str(excinfo.value)
@@ -69,7 +65,6 @@ class TestOpenAIClient:
     @patch("reprise.openai_client.client")
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
     def test_generate_cloze_deletions_error_handling(self, mock_client):
-        # Test various error cases that should all raise an exception
         test_cases = [
             # Invalid JSON
             MagicMock(message=MagicMock(content="invalid json")),
@@ -100,7 +95,6 @@ class TestOpenAIClient:
     @patch("reprise.openai_client.OPENAI_API_KEY", "fake-api-key")
     def test_generate_cloze_deletions_with_n_max(self, mock_client):
         """Test the generate_cloze_deletions function with the n_max parameter."""
-        # Setup mock chat completions
         mock_completion = MagicMock()
         mock_completion.choices = [
             MagicMock(
@@ -111,7 +105,6 @@ class TestOpenAIClient:
         ]
         mock_client.chat.completions.create.return_value = mock_completion
 
-        # Test the function with n_max=5
         result = generate_cloze_deletions("The sky is blue", n_max=5)
 
         # Verify the result has 3 sets (the model decided to use fewer than n_max)
@@ -120,7 +113,7 @@ class TestOpenAIClient:
         assert result[1] == [[11, 14]]
         assert result[2] == [[8, 9]]
 
-        # Check that n_max was properly passed in the API call
+        # Ensure that n_max was properly passed in the API call
         call_args = mock_client.chat.completions.create.call_args[1]
         messages = call_args["messages"]
         assert "up to 5 sets" in messages[0]["content"]
