@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -39,16 +39,18 @@ class TestService:
         for reprisal in reprisals:
             assert reprisal.cloze_deletion is not None
 
-    @patch("reprise.openai_client.client.chat.completions.create")
-    def test_generate_cloze_deletion(self, mock_openai, session):
+    @patch("reprise.openai_client.get_client")
+    def test_generate_cloze_deletion(self, mock_get_client, session):
+        # Set up the mock client
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_chat_completion_response(
+            '{"cloze_deletion_sets": [["George Washington"], ["George", "president"]]}'
+        )
+        mock_get_client.return_value = mock_client
+
         motif_content = "George Washington was the first president"
         motif = motif_factory(session=session).create(content=motif_content)
         assert len(motif.cloze_deletions) == 0
-
-        # Mock the OpenAI API call to return the expected response
-        mock_openai.return_value = mock_chat_completion_response(
-            '{"cloze_deletion_sets": [["George Washington"], ["George", "president"]]}'
-        )
 
         service = Service(session)
         cloze_deletions = service.cloze_delete_motif(motif.uuid, n_max=2)

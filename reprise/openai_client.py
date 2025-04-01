@@ -17,10 +17,12 @@ class OpenAIError(Exception):
     pass
 
 
-# Only initialize the client if an API key is available
-client = None
-if OPENAI_API_KEY:
-    client = OpenAI(api_key=OPENAI_API_KEY)
+def get_client():
+    """Get or create the OpenAI client."""
+    if not OPENAI_API_KEY:
+        logger.warning("OpenAI API key not set")
+        raise ValueError("OpenAI API key is required but not provided")
+    return OpenAI(api_key=OPENAI_API_KEY)
 
 
 def find_word_indices(text: str, words_to_mask: List[str]) -> List[List[int]]:
@@ -74,11 +76,8 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
         ValueError: If the OpenAI API key is not set
         Exception: For any OpenAI API errors or response parsing errors
     """
-    if not OPENAI_API_KEY or not client:
-        logger.warning("OpenAI API key not set")
-        raise ValueError("OpenAI API key is required but not provided")
-
     try:
+        client = get_client()
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[
