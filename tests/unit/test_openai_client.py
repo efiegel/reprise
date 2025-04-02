@@ -52,7 +52,7 @@ class TestOpenAIClient:
         result = find_word_indices(text, words_to_mask)
         assert result == expected_indices
 
-    def test_generate_cloze_deletions_success(self, mock_openai_client):
+    def test_generate_cloze_deletions(self, mock_openai_client):
         mock_chat_completion_response(
             mock_openai_client, '{"cloze_deletion_sets": [["sky", "blue"], ["is"]]}'
         )
