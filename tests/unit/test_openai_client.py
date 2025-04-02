@@ -1,16 +1,30 @@
 from unittest.mock import patch
 
 import pytest
+from openai import OpenAI
 
 from reprise.openai_client import (
     OpenAIError,
     find_word_indices,
     generate_cloze_deletions,
+    get_client,
 )
 from tests.utils import mock_chat_completion_response
 
 
 class TestOpenAIClient:
+    @patch("reprise.openai_client.OPENAI_API_KEY", "test-key")
+    def test_get_client(self):
+        client = get_client()
+        assert client is not None
+        assert isinstance(client, OpenAI)
+
+    @patch("reprise.openai_client.OPENAI_API_KEY", None)
+    def test_get_client_no_api_key(self):
+        with pytest.raises(ValueError) as excinfo:
+            get_client()
+        assert "OpenAI API key is required" in str(excinfo.value)
+
     @pytest.mark.parametrize(
         "text, words_to_mask, expected_indices",
         [
@@ -48,12 +62,6 @@ class TestOpenAIClient:
         assert len(result) == 2
         assert result[0] == [[4, 6], [11, 14]]
         assert result[1] == [[8, 9]]
-
-    @patch("reprise.openai_client.OPENAI_API_KEY", None)
-    def test_generate_cloze_deletions_no_api_key(self):
-        with pytest.raises(OpenAIError) as excinfo:
-            generate_cloze_deletions("The sky is blue")
-        assert "OpenAI API key is required" in str(excinfo.value)
 
     def test_generate_cloze_deletions_error_handling(self, mock_openai_client):
         test_cases = [
