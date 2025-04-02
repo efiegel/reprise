@@ -17,6 +17,7 @@ flask-cors = "*"
 sqlalchemy = "*"
 alembic = "*"
 flask-pydantic = "*"
+openai = "*"
 
 [requires]
 python_version = "3.11"

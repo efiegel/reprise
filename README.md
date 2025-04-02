@@ -12,6 +12,12 @@ From the `/frontend` directory, install node dependencies with `npm install` and
 npm start
 ```
 
+### OpenAI Integration
+This project uses OpenAI  models to to generate content. To enable this feature:
+
+1. Copy the `.env.example` file to `.env`
+2. Add your OpenAI API key to the `.env` file
+
 ### Database migrations
 This project uses alembic for migrations. Run them from the console like so:
 ```

@@ -76,6 +76,18 @@ def create_motif(body: MotifCreate) -> Dict[str, Any]:
                 citation = citation_repository.add_citation(body.citation)
             motif = repository.add_citation(motif.uuid, citation)
 
+        # Generate cloze deletions for the motif
+        if body.auto_generate_cloze_deletions:
+            service = Service(session)
+            try:
+                service.cloze_delete_motif(motif.uuid, n_max=2)
+            except Exception as e:
+                app.logger.error(f"Error generating cloze deletions: {e}")
+                return jsonify({"error": str(e)}), 500
+
+            # Refresh motif to incorporate cloze deletions
+            session.refresh(motif)
+
         response = MotifResponse(
             uuid=motif.uuid,
             content=motif.content,

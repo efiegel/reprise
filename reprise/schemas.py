@@ -32,6 +32,7 @@ class ClozeDeletionResponse(BaseModel):
 class MotifCreate(BaseModel):
     content: str
     citation: Optional[str] = None
+    auto_generate_cloze_deletions: bool = False
 
 
 class MotifUpdate(BaseModel):

@@ -9,13 +9,17 @@ export const motifService = {
     return response.json();
   },
 
-  createMotif: async (content, citation) => {
+  createMotif: async (content, citation, autoGenerateClozeDeletions) => {
     const response = await fetch(`${API_BASE_URL}/motifs`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ content, citation }),
+      body: JSON.stringify({
+        content,
+        citation,
+        auto_generate_cloze_deletions: autoGenerateClozeDeletions,
+      }),
     });
     return response.json();
   },

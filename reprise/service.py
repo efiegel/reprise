@@ -4,7 +4,12 @@ from uuid import uuid4
 from sqlalchemy.orm import Session
 
 from reprise.db import Reprisal
-from reprise.repository import MotifRepository, ReprisalRepository
+from reprise.openai_client import generate_cloze_deletions
+from reprise.repository import (
+    ClozeDeletionRepository,
+    MotifRepository,
+    ReprisalRepository,
+)
 
 
 class Service:
@@ -14,6 +19,7 @@ class Service:
         self.session = session
         self.motif_repository = MotifRepository(session)
         self.reprisal_repository = ReprisalRepository(session)
+        self.cloze_deletion_repository = ClozeDeletionRepository(session)
 
     def reprise(self) -> list[Reprisal]:
         motifs = self.motif_repository.get_motifs()
@@ -41,3 +47,26 @@ class Service:
                     break
 
         return reprisals
+
+    def cloze_delete_motif(self, motif_uuid: str, n_max: int):
+        """
+        Create multiple cloze deletions for a motif.
+
+        Args:
+            motif_uuid: The UUID of the motif to create cloze deletions for
+            n_max: The maximum number of different cloze deletion sets to generate
+
+        Returns:
+            List of created ClozeDeletion objects
+        """
+        motif = self.motif_repository.get_motif(motif_uuid)
+        mask_tuples_sets = generate_cloze_deletions(content=motif.content, n_max=n_max)
+
+        cloze_deletions = []
+        for mask_tuples in mask_tuples_sets:
+            cloze_deletion = self.cloze_deletion_repository.add_cloze_deletion(
+                motif_uuid=motif_uuid, mask_tuples=mask_tuples
+            )
+            cloze_deletions.append(cloze_deletion)
+
+        return cloze_deletions
