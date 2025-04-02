@@ -41,7 +41,7 @@ export default function MotifsTab() {
 
   useEffect(() => {
     fetchMotifs();
-  }, [page, pageSize]);
+  }, [page, pageSize, fetchMotifs]);
 
   const handlePageChange = (event, value) => {
     setPage(value);

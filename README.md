@@ -7,7 +7,7 @@ Install python dependencies with [pipenv](https://pipenv.pypa.io/en/latest/) and
 flask --app reprise.api run
 ```
 
-From the `/frontend` directory, install node dependencies with `npm install` and start the React app:
+From the `/ui` directory, install node dependencies with `npm install` and start the React app:
 ```
 npm start
 ```
