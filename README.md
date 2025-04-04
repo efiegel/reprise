@@ -23,3 +23,9 @@ This project uses alembic for migrations. Run them from the console like so:
 ```
 PYTHONPATH=. alembic <...>
 ```
+
+# Scheduling (for Mac)
+1. Copy `mailgun_example.plist` to `reprise.plist`, edit labeled parameters
+2. `launchctl load reprise.plist`
+
+Unload with `launchctl unload reprise.plist` as necessary
