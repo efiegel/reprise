@@ -44,8 +44,3 @@ class MailgunDispatcher:
 
         if response.status_code != 200:
             raise Exception(f"Failed to schedule email: {response.text}")
-
-
-if __name__ == "__main__":
-    dispatcher = MailgunDispatcher()
-    dispatcher.schedule()

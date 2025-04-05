@@ -9,7 +9,7 @@
     <array>
       <string>path-to-python-interpreter</string>  <!-- EDIT -->
       <string>-m</string>
-      <string>reprise.mailgun</string>
+      <string>scripts.dispatch</string>
     </array>
 
     <key>WorkingDirectory</key>
