@@ -1,7 +1,7 @@
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
 
-from reprise.db import Citation, ClozeDeletion, Motif, Reprisal
+from reprise.db import Citation, ClozeDeletion, Motif, Reprisal, ReprisalSchedule
 
 
 def motif_factory(session):
@@ -65,3 +65,18 @@ def reprisal_factory(session):
         cloze_deletion = factory.SubFactory(cloze_deletion_factory(session))
 
     return _ReprisalFactory
+
+
+def reprisal_schedule_factory(session):
+    class _ReprisalScheduleFactory(SQLAlchemyModelFactory):
+        class Meta:
+            model = ReprisalSchedule
+            sqlalchemy_session = session
+            sqlalchemy_session_persistence = "commit"
+
+        uuid = factory.Faker("uuid4")
+        reprisal_set_uuid = factory.Faker("uuid4")
+        scheduled_for = factory.Faker("date_time")
+        created_at = factory.Faker("date_time")
+
+    return _ReprisalScheduleFactory

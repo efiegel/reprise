@@ -87,3 +87,12 @@ class ClozeDeletion(Base):
 
     def masked_words(self) -> list[str]:
         return [self.motif.content[start : end + 1] for start, end in self.mask_tuples]
+
+
+class ReprisalSchedule(Base):
+    __tablename__ = "reprisal_schedule"
+
+    uuid = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    reprisal_set_uuid = Column(String(36), nullable=False)
+    scheduled_for = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
