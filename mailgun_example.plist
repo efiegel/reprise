@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>reprise</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>path-to-python-interpreter</string>  <!-- EDIT -->
+      <string>-m</string>
+      <string>reprise.mailgun</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>path-to-reprise-directory</string>  <!-- EDIT -->
+
+    <key>StartCalendarInterval</key>
+    <dict>
+      <key>Hour</key>
+      <integer>hour-to-run</integer>  <!-- EDIT -->
+      <key>Minute</key>
+      <integer>minute-to-run</integer>  <!-- EDIT -->
+    </dict>
+
+    
+    <key>PersistentState</key>
+    <true/>  <!-- Ensures the job runs once when the Mac wakes up if it was missed -->
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>logs/mailgun.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>logs/mailgun_error.log</string>
+  </dict>
+</plist>

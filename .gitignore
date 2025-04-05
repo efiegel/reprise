@@ -4,6 +4,12 @@
 # Environment variables
 .env
 
+# plist
+reprise.plist
+
+# logs
+logs/
+
 # Coverage reports
 .coverage
 .coverage.*
