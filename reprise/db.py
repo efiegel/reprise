@@ -21,6 +21,9 @@ def database_session():
     session = SessionLocal()
     try:
         yield session
+    except Exception as e:
+        session.rollback()
+        raise e
     finally:
         session.commit()
         session.close()
