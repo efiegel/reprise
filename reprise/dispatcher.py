@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from email.utils import formatdate
 from typing import List
 
@@ -19,7 +19,11 @@ class MailgunDispatcher:
     def __init__(self):
         pass
 
-    def schedule(self, target_times: List[datetime] = None):
+    def schedule(
+        self,
+        target_times: List[datetime],
+        schedule_buffer: timedelta = timedelta(minutes=30),
+    ):
         with database_session() as session:
             service = Service(session)
             schedule_repo = ReprisalScheduleRepository(session)
@@ -29,9 +33,8 @@ class MailgunDispatcher:
 
             # Schedule for times that don't have coverage
             for target_time in target_times:
-                # Check if there's already a schedule within 30 minutes of this time
                 has_coverage = any(
-                    abs((s.scheduled_for - target_time).total_seconds()) < 1800
+                    abs(s.scheduled_for - target_time) < schedule_buffer
                     for s in existing_schedules
                 )
 

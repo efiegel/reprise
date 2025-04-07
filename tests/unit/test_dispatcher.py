@@ -77,12 +77,12 @@ class TestMailgunDispatcher:
         reprisal = reprisal_factory(session=session).create()
         reprisal_schedule_factory(session=session).create(
             reprisal_set_uuid=reprisal.set_uuid,
-            scheduled_for=target_time + timedelta(minutes=15),
+            scheduled_for=target_time + timedelta(minutes=5),
         )
 
         # Execute
         dispatcher = MailgunDispatcher()
-        dispatcher.schedule([target_time])
+        dispatcher.schedule([target_time], schedule_buffer=timedelta(minutes=10))
 
         # Verify skipped due to existing schedule
         mock_mailgun_api.assert_not_called()
