@@ -1,4 +1,6 @@
-from reprise.db import Citation, ClozeDeletion, Motif, Reprisal
+from datetime import datetime
+
+from reprise.db import Citation, ClozeDeletion, Motif, Reprisal, ReprisalSchedule
 
 
 class MotifRepository:
@@ -114,3 +116,30 @@ class ClozeDeletionRepository:
         if cloze_deletion:
             self.session.delete(cloze_deletion)
             self.session.flush()
+
+
+class ReprisalScheduleRepository:
+    def __init__(self, session):
+        self.session = session
+
+    def get_reprisal_schedules(self) -> list[ReprisalSchedule]:
+        return (
+            self.session.query(ReprisalSchedule)
+            .order_by(ReprisalSchedule.scheduled_for.desc())
+            .all()
+        )
+
+    def add_reprisal_schedule(
+        self, reprisal_set_uuid: str, scheduled_for: datetime
+    ) -> ReprisalSchedule:
+        if not (
+            self.session.query(Reprisal).filter_by(set_uuid=reprisal_set_uuid).first()
+        ):
+            raise ValueError(f"Reprisal set {reprisal_set_uuid} not found")
+
+        reprisal_schedule = ReprisalSchedule(
+            reprisal_set_uuid=reprisal_set_uuid, scheduled_for=scheduled_for
+        )
+        self.session.add(reprisal_schedule)
+        self.session.flush()
+        return reprisal_schedule

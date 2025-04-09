@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -7,8 +8,15 @@ from reprise.repository import (
     ClozeDeletionRepository,
     MotifRepository,
     ReprisalRepository,
+    ReprisalScheduleRepository,
 )
-from tests.factories import citation_factory, cloze_deletion_factory, motif_factory
+from tests.factories import (
+    citation_factory,
+    cloze_deletion_factory,
+    motif_factory,
+    reprisal_factory,
+    reprisal_schedule_factory,
+)
 
 
 class TestMotifRepository:
@@ -198,3 +206,43 @@ class TestClozeDeletionRepository:
         cd2 = repository.add_cloze_deletion(motif.uuid, [(4, 6), (11, 14)])
         assert cd1.masked_words() == ["blue"]
         assert cd2.masked_words() == ["sky", "blue"]
+
+
+class TestReprisalScheduleRepository:
+    @pytest.fixture
+    def repository(self, session):
+        return ReprisalScheduleRepository(session)
+
+    def test_get_reprisal_schedules(self, repository, session):
+        # Create multiple schedules with different scheduled_for dates
+        schedules = []
+        for i in range(3):
+            schedule = reprisal_schedule_factory(session).create(
+                scheduled_for=datetime.now() + timedelta(days=i)
+            )
+            schedules.append(schedule)
+
+        # Get all schedules and verify they are ordered by scheduled_for in descending order
+        fetched_schedules = repository.get_reprisal_schedules()
+        assert len(fetched_schedules) == 3
+        assert fetched_schedules[0].scheduled_for > fetched_schedules[1].scheduled_for
+        assert fetched_schedules[1].scheduled_for > fetched_schedules[2].scheduled_for
+
+    def test_add_reprisal_schedule(self, repository, session):
+        reprisal = reprisal_factory(session=session).create()
+        reprisal_set_uuid = reprisal.set_uuid
+        scheduled_for = datetime.now() + timedelta(days=1)
+
+        schedule = repository.add_reprisal_schedule(reprisal_set_uuid, scheduled_for)
+        assert schedule.uuid is not None
+        assert schedule.created_at is not None
+        assert schedule.reprisal_set_uuid == reprisal_set_uuid
+        assert schedule.scheduled_for == scheduled_for
+
+    def test_add_reprisal_schedule_nonexistent_set(self, repository):
+        nonexistent_set_uuid = str(uuid4())
+        scheduled_for = datetime.now() + timedelta(days=1)
+
+        with pytest.raises(ValueError) as exc_info:
+            repository.add_reprisal_schedule(nonexistent_set_uuid, scheduled_for)
+        assert str(exc_info.value) == f"Reprisal set {nonexistent_set_uuid} not found"

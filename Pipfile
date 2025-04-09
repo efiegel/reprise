@@ -18,6 +18,7 @@ sqlalchemy = "*"
 alembic = "*"
 flask-pydantic = "*"
 openai = "*"
+requests = "*"
 
 [requires]
 python_version = "3.11"
