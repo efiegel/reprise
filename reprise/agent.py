@@ -5,8 +5,6 @@ from typing import List
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
-from reprise import settings
-
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +37,6 @@ Take these sets and call the find_word_indices function to get the mask_tuples.
 
 agent = Agent(
     model="gpt-4o-mini",
-    api_key=settings.OPENAI_API_KEY,
     system_prompt=system_prompt,
     result_type=MaskTuples,
 )
