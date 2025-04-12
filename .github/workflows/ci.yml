@@ -5,6 +5,8 @@ on: push
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      OPEN_API_KEY: my-fake-key
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
