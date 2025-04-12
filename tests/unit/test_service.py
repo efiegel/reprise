@@ -1,8 +1,10 @@
+from unittest.mock import patch
+
 import pytest
 
+from reprise.agent import MaskTuples
 from reprise.service import Service
 from tests.factories import cloze_deletion_factory, motif_factory
-from tests.utils import mock_chat_completion_response
 
 
 class TestService:
@@ -37,10 +39,10 @@ class TestService:
         for reprisal in reprisals:
             assert reprisal.cloze_deletion is not None
 
-    def test_generate_cloze_deletion(self, mock_openai_client, session):
-        mock_chat_completion_response(
-            mock_openai_client,
-            '{"cloze_deletion_sets": [["George Washington"], ["George", "president"]]}',
+    @patch("pydantic_ai.agent.Agent.run_sync")
+    def test_generate_cloze_deletion(self, mock_agent_run_sync, session):
+        mock_agent_run_sync.return_value.data = MaskTuples(
+            tuples=[[[0, 16]], [[0, 5], [32, 40]]]
         )
 
         motif_content = "George Washington was the first president"
@@ -65,9 +67,10 @@ class TestService:
         assert [[0, 16]] in mask_tuples_list
         assert [[0, 5], [32, 40]] in mask_tuples_list
 
-    def test_generate_cloze_deletion_fallback(self, mock_openai_client, session):
-        # Mock the OpenAI API call to raise an exception
-        mock_openai_client.side_effect = Exception("API Error")
+    @patch("pydantic_ai.agent.Agent.run_sync")
+    def test_generate_cloze_deletion_fallback(self, mock_agent_run_sync, session):
+        # Mock the LLM call to raise an exception
+        mock_agent_run_sync.side_effect = Exception("API Error")
 
         motif = motif_factory(session=session).create()
         assert len(motif.cloze_deletions) == 0

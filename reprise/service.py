@@ -3,8 +3,8 @@ from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
+from reprise.agent import generate_cloze_deletions
 from reprise.db import Reprisal
-from reprise.openai_client import generate_cloze_deletions
 from reprise.repository import (
     ClozeDeletionRepository,
     MotifRepository,

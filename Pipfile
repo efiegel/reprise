@@ -19,6 +19,7 @@ alembic = "*"
 flask-pydantic = "*"
 openai = "*"
 requests = "*"
+pydantic-ai = "*"
 
 [requires]
 python_version = "3.11"

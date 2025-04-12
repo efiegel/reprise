@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 
 from reprise.api import app
@@ -20,9 +18,3 @@ def session():
 def client():
     app.testing = True
     return app.test_client()
-
-
-@pytest.fixture
-def mock_openai_client():
-    with patch("reprise.openai_client.get_client") as mock_get_client:
-        yield mock_get_client
