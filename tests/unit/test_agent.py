@@ -2,14 +2,14 @@ from unittest.mock import patch
 
 import pytest
 
-from reprise.openai_client import (
+from reprise.agent import (
     ClozeDeletionResult,
     find_word_indices,
     generate_cloze_deletions,
 )
 
 
-class TestOpenAIClient:
+class TestAgent:
     @pytest.mark.parametrize(
         "text, words_to_mask, expected_indices",
         [

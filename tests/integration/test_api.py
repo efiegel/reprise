@@ -3,8 +3,8 @@ from unittest.mock import patch
 import pytest
 from flask import json
 
+from reprise.agent import ClozeDeletionResult
 from reprise.db import Citation, Motif, database_session
-from reprise.openai_client import ClozeDeletionResult
 from tests.factories import citation_factory, cloze_deletion_factory, motif_factory
 
 

@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from reprise.openai_client import ClozeDeletionResult
+from reprise.agent import ClozeDeletionResult
 from reprise.service import Service
 from tests.factories import cloze_deletion_factory, motif_factory
 
