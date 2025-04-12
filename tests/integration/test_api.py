@@ -1,9 +1,11 @@
+from unittest.mock import patch
+
 import pytest
 from flask import json
 
 from reprise.db import Citation, Motif, database_session
+from reprise.openai_client import ClozeDeletionResult
 from tests.factories import citation_factory, cloze_deletion_factory, motif_factory
-from tests.utils import mock_chat_completion_response
 
 
 class TestAPI:
@@ -93,13 +95,13 @@ class TestAPI:
             assert motif.content == motif_with_citation_data["content"]
             assert motif.citation.title == motif_with_citation_data["citation"]
 
+    @patch("pydantic_ai.agent.Agent.run_sync")
     def test_add_motif_with_auto_cloze_deletions(
-        self, mock_openai_client, client, motif_with_auto_cloze_deletions_data
+        self, mock_agent_run_sync, client, motif_with_auto_cloze_deletions_data
     ):
         # Mock the OpenAI response to return specific mask tuple sets
-        mock_chat_completion_response(
-            mock_openai_client,
-            '{"cloze_deletion_sets": [["Test"], ["Test", "content"]]}',
+        mock_agent_run_sync.return_value = ClozeDeletionResult(
+            cloze_deletion_sets=[["Test"], ["Test", "content"]]
         )
 
         response = client.post(
@@ -413,11 +415,12 @@ class TestAPI:
 
         assert response.status_code == 400
 
+    @patch("pydantic_ai.agent.Agent.run_sync")
     def test_add_motif_with_openai_error(
-        self, mock_openai_client, client, motif_with_auto_cloze_deletions_data
+        self, mock_agent_run_sync, client, motif_with_auto_cloze_deletions_data
     ):
         # Mock the OpenAI API call to raise an exception
-        mock_openai_client.side_effect = Exception("OpenAI API Error")
+        mock_agent_run_sync.side_effect = Exception("OpenAI API Error")
 
         response = client.post(
             "/motifs",

@@ -1,30 +1,15 @@
 from unittest.mock import patch
 
 import pytest
-from openai import OpenAI
 
 from reprise.openai_client import (
-    OpenAIError,
+    ClozeDeletionResult,
     find_word_indices,
     generate_cloze_deletions,
-    get_client,
 )
-from tests.utils import mock_chat_completion_response
 
 
 class TestOpenAIClient:
-    @patch("reprise.openai_client.OPENAI_API_KEY", "test-key")
-    def test_get_client(self):
-        client = get_client()
-        assert client is not None
-        assert isinstance(client, OpenAI)
-
-    @patch("reprise.openai_client.OPENAI_API_KEY", None)
-    def test_get_client_no_api_key(self):
-        with pytest.raises(ValueError) as excinfo:
-            get_client()
-        assert "OpenAI API key is required" in str(excinfo.value)
-
     @pytest.mark.parametrize(
         "text, words_to_mask, expected_indices",
         [
@@ -52,9 +37,10 @@ class TestOpenAIClient:
         result = find_word_indices(text, words_to_mask)
         assert result == expected_indices
 
-    def test_generate_cloze_deletions(self, mock_openai_client):
-        mock_chat_completion_response(
-            mock_openai_client, '{"cloze_deletion_sets": [["sky", "blue"], ["is"]]}'
+    @patch("pydantic_ai.agent.Agent.run_sync")
+    def test_generate_cloze_deletions(self, mock_agent_run_sync):
+        mock_agent_run_sync.return_value = ClozeDeletionResult(
+            cloze_deletion_sets=[["sky", "blue"], ["is"]]
         )
 
         result = generate_cloze_deletions("The sky is blue")
@@ -63,39 +49,11 @@ class TestOpenAIClient:
         assert result[0] == [[4, 6], [11, 14]]
         assert result[1] == [[8, 9]]
 
-    def test_generate_cloze_deletions_error_handling(self, mock_openai_client):
-        test_cases = [
-            # Invalid JSON
-            mock_chat_completion_response(mock_openai_client, "invalid json"),
-            # Missing cloze_deletion_sets key
-            mock_chat_completion_response(mock_openai_client, '{"other_key": "value"}'),
-            # Invalid cloze_deletion_sets format
-            mock_chat_completion_response(
-                mock_openai_client, '{"cloze_deletion_sets": 123}'
-            ),
-            # Words that don't exist in text
-            mock_chat_completion_response(
-                mock_openai_client, '{"cloze_deletion_sets": [["red", "green"]]}'
-            ),
-        ]
-
-        for case in test_cases:
-            mock_openai_client.return_value = case
-            with pytest.raises(OpenAIError) as excinfo:
-                generate_cloze_deletions("The sky is blue")
-            assert "Failed to generate cloze deletions" in str(excinfo.value)
-
-        # Test API error separately since it needs different handling
-        mock_openai_client.side_effect = Exception("API Error")
-        with pytest.raises(OpenAIError) as excinfo:
-            generate_cloze_deletions("The sky is blue")
-        assert "Failed to generate cloze deletions" in str(excinfo.value)
-        assert "API Error" in str(excinfo.value)
-
-    def test_generate_cloze_deletions_with_n_max(self, mock_openai_client):
+    @patch("pydantic_ai.agent.Agent.run_sync")
+    def test_generate_cloze_deletions_with_n_max(self, mock_agent_run_sync):
         """Test the generate_cloze_deletions function with the n_max parameter."""
-        mock_chat_completion_response(
-            mock_openai_client, '{"cloze_deletion_sets": [["sky"], ["blue"], ["is"]]}'
+        mock_agent_run_sync.return_value = ClozeDeletionResult(
+            cloze_deletion_sets=[["sky"], ["blue"], ["is"]]
         )
 
         result = generate_cloze_deletions("The sky is blue", n_max=5)
@@ -106,11 +64,12 @@ class TestOpenAIClient:
         assert result[1] == [[11, 14]]
         assert result[2] == [[8, 9]]
 
-    def test_generate_cloze_deletions_invalid_response(self, mock_openai_client):
-        mock_chat_completion_response(
-            mock_openai_client, '{"cloze_deletion_sets": [["apples"]]}'
+    @patch("pydantic_ai.agent.Agent.run_sync")
+    def test_generate_cloze_deletions_invalid_response(self, mock_agent_run_sync):
+        mock_agent_run_sync.return_value = ClozeDeletionResult(
+            cloze_deletion_sets=[["apples"]]
         )
 
-        with pytest.raises(OpenAIError) as excinfo:
+        with pytest.raises(ValueError) as excinfo:
             generate_cloze_deletions("The sky is blue")
         assert "Invalid cloze deletion generation" in str(excinfo.value)

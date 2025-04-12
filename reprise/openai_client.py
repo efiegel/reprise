@@ -1,27 +1,11 @@
-import json
 import logging
 import re
 from typing import List
 
-from openai import OpenAI
-
-from reprise.settings import OPENAI_API_KEY, OPENAI_MODEL
+from pydantic import BaseModel, Field
+from pydantic_ai import Agent
 
 logger = logging.getLogger(__name__)
-
-
-class OpenAIError(Exception):
-    """Exception raised for OpenAI API related errors."""
-
-    pass
-
-
-def get_client():
-    """Get or create the OpenAI client."""
-    if not OPENAI_API_KEY:
-        logger.warning("OpenAI API key not set")
-        raise ValueError("OpenAI API key is required but not provided")
-    return OpenAI(api_key=OPENAI_API_KEY)
 
 
 def find_word_indices(text: str, words_to_mask: List[str]) -> List[List[int]]:
@@ -58,9 +42,15 @@ def find_word_indices(text: str, words_to_mask: List[str]) -> List[List[int]]:
     return indices
 
 
+class ClozeDeletionResult(BaseModel):
+    cloze_deletion_sets: List[List[str]] = Field(
+        description="List of cloze deletion sets, each containing a list of words or phrases to mask"
+    )
+
+
 def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int]]]:
     """
-    Use OpenAI model to generate multiple cloze deletion sets.
+    Use AI to generate multiple cloze deletion sets.
     Returns a list of cloze deletion sets, each containing a list of [start, end]
     position pairs that define what should be masked.
 
@@ -70,58 +60,42 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
 
     Returns:
         List of lists of [start, end] positions, where each inner list represents a cloze deletion set
-
-    Raises:
-        ValueError: If the OpenAI API key is not set
-        Exception: For any OpenAI API errors or response parsing errors
     """
-    try:
-        client = get_client()
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"""You are a helpful assistant that creates cloze deletions for learning purposes.
-                    Given a text, create an appropriate number of different cloze deletion sets (up to {n_max} sets) 
-                    where each set masks different important words or phrases that are important to learn. For example,
-                    think of this as making flashcards for the text. Make as many as appropriate to learn the important
-                    information, but do not exceed {n_max} sets.
-                    
-                    Return your response as a JSON object with a 'cloze_deletion_sets' key containing an array of arrays.
-                    Each inner array contains strings representing the words or phrases to mask for that cloze deletion set.
 
-                    For example, for the text "George Washington was the first president":
-                    {{
-                      "cloze_deletion_sets": [
-                        ["George Washington"],
-                        ["first"],
-                        ["president"]
-                      ]
-                    }}
-                    Note how the cloze deletions here represent important qualifiers on relevant information as well, i.e.
-                    we did not choose "first president" but instead chose "first" and "president" separately.
-                    
-                    Be precise with your words to ensure they can be found exactly in the text.
-                    """,
-                },
-                {
-                    "role": "user",
-                    "content": f"Create appropriate cloze deletion sets (maximum {n_max}) for: '{content}'",
-                },
-            ],
-            temperature=0.7,
-            max_tokens=250,
-            response_format={"type": "json_object"},
-        )
+    system_prompt = f"""
+    You are a helpful assistant that creates cloze deletions for learning purposes.
+    Given a text, create an appropriate number of different cloze deletion sets (up to {n_max} sets) 
+    where each set masks different important words or phrases that are important to learn. For example,
+    think of this as making flashcards for the text. Make as many as appropriate to learn the important
+    information, but do not exceed {n_max} sets.
+    
+    Return your response as a JSON object with a 'cloze_deletion_sets' key containing an array of arrays.
+    Each inner array contains strings representing the words or phrases to mask for that cloze deletion set.
 
-        result = response.choices[0].message.content
-        mask_data = json.loads(result)
-        cloze_deletion_sets = mask_data["cloze_deletion_sets"]
+    For example, for the text "George Washington was the first president":
+    {{
+        "cloze_deletion_sets": [
+        ["George Washington"],
+        ["first"],
+        ["president"]
+        ]
+    }}
+    Note how the cloze deletions here represent important qualifiers on relevant information as well, i.e.
+    we did not choose "first president" but instead chose "first" and "president" separately.
+    
+    Be precise with your words to ensure they can be found exactly in the text.
+    """
 
-    except Exception as e:
-        logger.error(f"Error calling OpenAI: {e}")
-        raise OpenAIError(f"Failed to generate cloze deletions: {str(e)}") from e
+    agent = Agent(
+        model="gpt-4o-mini",
+        system_prompt=system_prompt,
+        result_type=ClozeDeletionResult,
+    )
+
+    response = agent.run_sync(
+        f"Create appropriate cloze deletion sets (maximum {n_max}) for: '{content}'"
+    )
+    cloze_deletion_sets = response.cloze_deletion_sets
 
     # Find indices for each set of words to mask
     all_mask_tuples = []
@@ -131,6 +105,6 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
             all_mask_tuples.append(mask_tuples)
 
     if len(cloze_deletion_sets) != len(all_mask_tuples):
-        raise OpenAIError("Invalid cloze deletion generation")
+        raise ValueError("Invalid cloze deletion generation")
 
     return all_mask_tuples
