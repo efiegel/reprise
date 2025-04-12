@@ -1,11 +1,9 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from reprise.agent import (
-    ClozeDeletionResult,
     find_word_indices,
-    generate_cloze_deletions,
 )
 
 
@@ -34,42 +32,5 @@ class TestAgent:
         self, text, words_to_mask, expected_indices
     ):
         """Test find_word_indices with various inputs using parametrization."""
-        result = find_word_indices(text, words_to_mask)
+        result = find_word_indices(MagicMock(), text, words_to_mask)
         assert result == expected_indices
-
-    @patch("pydantic_ai.agent.Agent.run_sync")
-    def test_generate_cloze_deletions(self, mock_agent_run_sync):
-        mock_agent_run_sync.return_value = ClozeDeletionResult(
-            cloze_deletion_sets=[["sky", "blue"], ["is"]]
-        )
-
-        result = generate_cloze_deletions("The sky is blue")
-
-        assert len(result) == 2
-        assert result[0] == [[4, 6], [11, 14]]
-        assert result[1] == [[8, 9]]
-
-    @patch("pydantic_ai.agent.Agent.run_sync")
-    def test_generate_cloze_deletions_with_n_max(self, mock_agent_run_sync):
-        """Test the generate_cloze_deletions function with the n_max parameter."""
-        mock_agent_run_sync.return_value = ClozeDeletionResult(
-            cloze_deletion_sets=[["sky"], ["blue"], ["is"]]
-        )
-
-        result = generate_cloze_deletions("The sky is blue", n_max=5)
-
-        # Verify the result has 3 sets (the model decided to use fewer than n_max)
-        assert len(result) == 3
-        assert result[0] == [[4, 6]]
-        assert result[1] == [[11, 14]]
-        assert result[2] == [[8, 9]]
-
-    @patch("pydantic_ai.agent.Agent.run_sync")
-    def test_generate_cloze_deletions_invalid_response(self, mock_agent_run_sync):
-        mock_agent_run_sync.return_value = ClozeDeletionResult(
-            cloze_deletion_sets=[["apples"]]
-        )
-
-        with pytest.raises(ValueError) as excinfo:
-            generate_cloze_deletions("The sky is blue")
-        assert "Invalid cloze deletion generation" in str(excinfo.value)

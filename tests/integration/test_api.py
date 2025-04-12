@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 from flask import json
 
-from reprise.agent import ClozeDeletionResult
+from reprise.agent import MaskTuples
 from reprise.db import Citation, Motif, database_session
 from tests.factories import citation_factory, cloze_deletion_factory, motif_factory
 
@@ -99,9 +99,9 @@ class TestAPI:
     def test_add_motif_with_auto_cloze_deletions(
         self, mock_agent_run_sync, client, motif_with_auto_cloze_deletions_data
     ):
-        # Mock the OpenAI response to return specific mask tuple sets
-        mock_agent_run_sync.return_value = ClozeDeletionResult(
-            cloze_deletion_sets=[["Test"], ["Test", "content"]]
+        # Mock the LLM response to return specific mask tuple sets
+        mock_agent_run_sync.return_value.data = MaskTuples(
+            tuples=[[[0, 3]], [[0, 3], [11, 17]]]
         )
 
         response = client.post(
@@ -419,7 +419,7 @@ class TestAPI:
     def test_add_motif_with_openai_error(
         self, mock_agent_run_sync, client, motif_with_auto_cloze_deletions_data
     ):
-        # Mock the OpenAI API call to raise an exception
+        # Mock the LLM call to raise an exception
         mock_agent_run_sync.side_effect = Exception("OpenAI API Error")
 
         response = client.post(

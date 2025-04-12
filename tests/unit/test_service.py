@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from reprise.agent import ClozeDeletionResult
+from reprise.agent import MaskTuples
 from reprise.service import Service
 from tests.factories import cloze_deletion_factory, motif_factory
 
@@ -41,8 +41,8 @@ class TestService:
 
     @patch("pydantic_ai.agent.Agent.run_sync")
     def test_generate_cloze_deletion(self, mock_agent_run_sync, session):
-        mock_agent_run_sync.return_value = ClozeDeletionResult(
-            cloze_deletion_sets=[["George Washington"], ["George", "president"]]
+        mock_agent_run_sync.return_value.data = MaskTuples(
+            tuples=[[[0, 16]], [[0, 5], [32, 40]]]
         )
 
         motif_content = "George Washington was the first president"
@@ -69,7 +69,7 @@ class TestService:
 
     @patch("pydantic_ai.agent.Agent.run_sync")
     def test_generate_cloze_deletion_fallback(self, mock_agent_run_sync, session):
-        # Mock the OpenAI API call to raise an exception
+        # Mock the LLM call to raise an exception
         mock_agent_run_sync.side_effect = Exception("API Error")
 
         motif = motif_factory(session=session).create()
