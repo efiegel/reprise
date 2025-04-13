@@ -29,11 +29,16 @@ from reprise.schemas import (
 from reprise.service import Service
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
 
-if settings.LOGFIRE_TOKEN:
-    logfire.configure(token=settings.LOGFIRE_TOKEN)
-    logfire.instrument_openai()
+
+def configure_logfire():
+    if settings.LOGFIRE_TOKEN:
+        logfire.configure(token=settings.LOGFIRE_TOKEN)
+        logfire.instrument_openai()
+
+
+configure_logfire()
+CORS(app)
 
 
 @app.errorhandler(400)
