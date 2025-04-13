@@ -1,9 +1,11 @@
 from typing import Any, Dict, List
 
+import logfire
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_pydantic import validate
 
+from reprise import settings
 from reprise.db import database_session
 from reprise.repository import (
     CitationRepository,
@@ -28,6 +30,10 @@ from reprise.service import Service
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+if settings.LOGFIRE_TOKEN:
+    logfire.configure(token=settings.LOGFIRE_TOKEN)
+    logfire.instrument_openai()
 
 
 @app.errorhandler(400)
