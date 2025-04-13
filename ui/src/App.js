@@ -1,5 +1,5 @@
 import React from "react";
-import { Container } from "@mui/material";
+import { Container, Link, Box } from "@mui/material";
 import TabsContainer from "./components/TabsContainer";
 import MotifsTab from "./components/MotifsTab";
 import CitationsTab from "./components/CitationsTab";
@@ -14,6 +14,7 @@ const darkTheme = createTheme({
 });
 
 function App() {
+  const logfireUrl = process.env.REACT_APP_LOGFIRE_PROJECT_URL;
   const tabs = [
     { label: "Reprisals", content: <ReprisalsTab /> },
     { label: "Motifs", content: <MotifsTab /> },
@@ -24,7 +25,19 @@ function App() {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Container>
-        <h1>Reprise</h1>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <h1>Reprise</h1>
+          {logfireUrl && (
+            <Link
+              href={logfireUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ fontSize: "0.8rem", color: "text.secondary" }}
+            >
+              {logfireUrl}
+            </Link>
+          )}
+        </Box>
         <TabsContainer tabs={tabs} />
       </Container>
     </ThemeProvider>
