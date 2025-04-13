@@ -24,6 +24,10 @@ This project uses alembic for migrations. Run them from the console like so:
 PYTHONPATH=. alembic <...>
 ```
 
+### Logfire Integration
+Optionally create a [logfire project](https://logfire.pydantic.dev/docs/#logfire) for model tracing. Add `LOGFIRE_TOKEN` to `.env`.
+Additionally copy `/ui/.env.example` to `/ui/.env` and set the project URL.
+
 ## Email scheduling (for Mac)
 Leverage [Mailgun](https://www.mailgun.com/) and Mac `launchctl` to schedule reprisal emails in lieu of a deployed backend or task executor.
 
