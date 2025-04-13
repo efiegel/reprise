@@ -20,6 +20,7 @@ flask-pydantic = "*"
 openai = "*"
 requests = "*"
 pydantic-ai = "*"
+logfire = "*"
 
 [requires]
 python_version = "3.11"
