@@ -10,7 +10,7 @@ export default function ReprisalsTab() {
   useEffect(() => {
     // Automatically fetch a new set of reprisals on mount
     fetchReprisals();
-  }, []);
+  }, [fetchReprisals]);
 
   return (
     <Box>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { reprisalService } from "../services/reprisalService";
 import { applyMasking } from "../utils/maskingUtils";
 
@@ -14,7 +14,7 @@ export function useReprisals() {
     }));
   };
 
-  const fetchReprisals = async () => {
+  const fetchReprisals = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await reprisalService.getReprisals();
@@ -35,7 +35,7 @@ export function useReprisals() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   return {
     reprisals,
