@@ -1,3 +1,32 @@
+[project]
+name = "reprise"
+dynamic = ["version"]
+
+dependencies = [
+    "python-dotenv",
+    "flask",
+    "flask-cors",
+    "sqlalchemy",
+    "alembic",
+    "flask-pydantic",
+    "openai",
+    "requests",
+    "pydantic-ai",
+    "logfire"
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+    "pytest-cov",
+    "pytest-env",
+    "factory-boy"
+]
+
+[tool.setuptools]
+packages = ["reprise"]
+
 [tool.ruff]
 line-length = 88
 lint.select = ["E", "F", "C", "N", "Q", "B"]
