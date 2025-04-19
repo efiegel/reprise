@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# OpenAI Settings
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 # Logfire token
 LOGFIRE_TOKEN = os.getenv("LOGFIRE_TOKEN")
 

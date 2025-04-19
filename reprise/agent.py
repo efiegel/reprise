@@ -1,9 +1,12 @@
 import logging
 import re
+from dataclasses import dataclass
 from typing import List
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
+
+from reprise.settings import OPENAI_API_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +38,15 @@ we did not choose "first president" but instead chose "first" and "president" se
 Take these sets and call the find_word_indices function to get the mask_tuples.
 """
 
+
+@dataclass
+class OpenAIDependencies:
+    api_key: str
+
+
 agent = Agent(
     model="gpt-4o-mini",
+    deps_type=OpenAIDependencies,
     system_prompt=system_prompt,
     result_type=MaskTuples,
 )
@@ -94,6 +104,7 @@ def generate_cloze_deletions(content: str, n_max: int = 1) -> List[List[List[int
     """
 
     response = agent.run_sync(
-        f"Create appropriate cloze deletions (n_max={n_max}) for: '{content}'"
+        f"Create appropriate cloze deletions (n_max={n_max}) for: '{content}'",
+        deps=OpenAIDependencies(api_key=OPENAI_API_KEY),
     )
     return response.data.tuples
