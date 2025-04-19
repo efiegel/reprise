@@ -1334,7 +1334,7 @@ requires-dist = [
     { name = "flask" },
     { name = "flask-cors" },
     { name = "flask-pydantic" },
-    { name = "logfire" },
+    { name = "logfire", specifier = ">=3.14.0" },
     { name = "openai" },
     { name = "pydantic-ai" },
     { name = "python-dotenv" },
