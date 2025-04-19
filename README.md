@@ -2,7 +2,7 @@
 Enhance learning retention with spaced repetition. This project contains a React app served by a Flask API.
 
 ## Setup
-Install python dependencies with [pipenv](https://pipenv.pypa.io/en/latest/) and start the web server:
+Install python dependencies with [uv](https://docs.astral.sh/uv/) and start the web server:
 ```
 flask --app reprise.api run
 ```
