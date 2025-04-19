@@ -22,3 +22,6 @@ logs/
 
 # sqlite databases
 *.db
+
+# installation
+*.egg-info
