@@ -16,4 +16,4 @@ jobs:
     - run: python -m pip install --upgrade pip
     - run: pip install uv
     - run: uvx ruff check
-    - run: uvx pytest --cov=reprise --cov-fail-under=100
+    - run: uv run pytest --cov=reprise --cov-fail-under=100
