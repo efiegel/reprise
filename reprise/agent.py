@@ -45,7 +45,7 @@ class OpenAIDependencies:
 
 
 agent = Agent(
-    model="gpt-4o-mini",
+    model="gpt-4.1-mini",
     deps_type=OpenAIDependencies,
     system_prompt=system_prompt,
     result_type=MaskTuples,
