@@ -1,5 +1,6 @@
 [project]
 name = "reprise"
+requires-python = ">= 3.11"
 dynamic = ["version"]
 
 dependencies = [
